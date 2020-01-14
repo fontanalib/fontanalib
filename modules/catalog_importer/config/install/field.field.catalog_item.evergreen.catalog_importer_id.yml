@@ -1,0 +1,18 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.catalog_item.catalog_importer_id
+    - catalog_item.catalog.evergreen
+id: catalog_item.evergreen.catalog_importer_id
+field_name: catalog_importer_id
+entity_type: catalog_item
+bundle: evergreen
+label: 'Included in feeds'
+description: 'Feeds IDs where this item was present'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: string

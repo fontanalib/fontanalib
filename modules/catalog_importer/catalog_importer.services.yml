@@ -1,0 +1,13 @@
+services:
+  
+  cache.catalog_importer:
+    class: Drupal\Core\Cache\CacheBackendInterface
+    tags:
+      - { name: cache.bin }
+    factory: cache_factory:get
+    arguments: [catalog_importer]
+
+  # catalog_importer.route_subscriber:
+  #   class: Drupal\catalog_importer\Routing\RouteSubscriber
+  #   tags:
+  #     - { name: event_subscriber }
