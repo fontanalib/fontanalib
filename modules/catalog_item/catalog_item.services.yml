@@ -1,0 +1,52 @@
+services:
+  # catalog_item.route_subscriber:
+  #   class: Drupal\catalog_item\Routing\RouteSubscriber
+  #   tags:
+  #     - { name: event_subscriber }
+  catalog_item.grant_storage:
+    class: Drupal\catalog_item\CatalogItemGrantDatabaseStorage
+    arguments: ['@database', '@module_handler', '@language_manager']
+    tags:
+      - { name: backend_overridable }
+  access_check.catalog_item.revision:
+    class: Drupal\catalog_item\Access\CatalogItemRevisionAccessCheck
+    arguments: ['@entity_type.manager']
+    tags:
+      - { name: access_check, applies_to: _access_catalog_item_revision }
+  access_check.catalog_item.add:
+    class: Drupal\catalog_item\Access\CatalogItemAddAccessCheck
+    arguments: ['@entity_type.manager']
+    tags:
+      - { name: access_check, applies_to: _catalog_item_add_access }
+  access_check.catalog_item.preview:
+    class: Drupal\catalog_item\Access\CatalogItemPreviewAccessCheck
+    arguments: ['@entity_type.manager']
+    tags:
+      - { name: access_check, applies_to: _catalog_item_preview_access }
+  catalog_item.admin_path.route_subscriber:
+    class: Drupal\catalog_item\EventSubscriber\CatalogItemAdminRouteSubscriber
+    arguments: ['@config.factory', '@router.builder']
+    tags:
+      - { name: event_subscriber }
+  catalog_item_preview:
+    class: Drupal\catalog_item\ParamConverter\CatalogItemPreviewConverter
+    arguments: ['@tempstore.private']
+    tags:
+      - { name: paramconverter }
+    lazy: true
+  catalog_item.page_cache_response_policy.deny_catalog_item_preview:
+    class: Drupal\catalog_item\PageCache\DenyCatalogItemPreview
+    arguments: ['@current_route_match']
+    public: false
+    tags:
+      - { name: page_cache_response_policy }
+  cache_context.user.catalog_item_grants:
+    class: Drupal\catalog_item\Cache\CatalogItemAccessGrantsCacheContext
+    arguments: ['@current_user']
+    tags:
+      - { name: cache.context }
+  catalog_item.catalog_item_route_context:
+    class: Drupal\catalog_item\ContextProvider\CatalogItemRouteContext
+    arguments: ['@current_route_match']
+    tags:
+      - { name: 'context_provider' }

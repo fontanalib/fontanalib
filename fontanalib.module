@@ -1,0 +1,172 @@
+<?php
+use Drupal\user\Entity\User;
+use Drupal\Core\Url;
+/**
+ * @file
+ * Contains fontanalib.module.
+ */
+
+/**
+ * Implements hook_user_cancel_methods_alter().
+ */
+function fontanalib_user_cancel_methods_alter(&$methods) {
+  $account = \Drupal::currentUser();
+  $methods['user_cancel_designate'] = [
+    'title' => t('Disable the account and make its content belong to another user.'),
+    'description' => t('All the content will be assigned to another user.'),
+    'access' => $account
+      ->hasPermission('administer users'),
+  ];
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function fontanalib_form_alter(&$form, $form_state, $form_id) {
+  $forms = ["user_multiple_cancel_confirm", "user_cancel_form"];
+  if (in_array($form_id, $forms)) {
+    $roles = \Drupal::config('fontanalib.settings')->get('role_content_assign');
+    if(empty($roles) || !isset($roles['node'])){
+      //$roles = [];
+      $role_array = \Drupal::entityTypeManager()->getStorage('user_role')->loadMultiple();
+      $roles = [];
+      foreach($role_array as $role){
+        if($role->hasPermission('access content overview')){
+          $roles[$role->id] = $role->label;
+        }
+      }
+    }
+
+    if(!isset($form['user_cancel_reassign_to'])){
+      $form['#tree'] = TRUE;
+      $form['user_cancel_reassign_to'] = [
+        '#type' => 'fieldset',
+        '#title' => t('Re-assignment options'),
+        //'#tree' => TRUE,
+      ];
+    }
+
+    $form['user_cancel_reassign_to']['node'] = [
+      '#type' => 'entity_autocomplete',
+      '#title' => t("User to assign content to"),
+      '#target_type' => 'user',
+      '#selection_settings' => [
+        'include_anonymous' => FALSE,
+        'filter' => [
+          'type' => 'role',
+          'role' => isset($roles['node']) ? $roles['node'] : $roles,
+        ],
+      ],
+      '#states' => [
+        'visible' => [
+          '[name="user_cancel_method"]' => [
+            'value' => 'user_cancel_designate',
+          ],
+        ],
+        'required' => [
+          '[name="user_cancel_method"]' => [
+            'value' => 'user_cancel_designate',
+          ],
+        ],
+      ],
+      // Validation is done in static::validateConfigurationForm().
+      '#size' => '60',
+      '#maxlength' => '60',
+      "#description" => t("Select a user to reassign content to."),
+      '#required' => FALSE,
+    ];
+    // Rearrange things in the form: user_cancel_reassign_to must be in between
+    // other fields.
+    $form['account']['#weight'] = 0;
+    $form['user_cancel_method']['#weight'] = 10;
+    $form['user_cancel_reassign_to']['#weight'] = 20;
+    $form['user_cancel_confirm']['#weight'] = 30;
+    $form['description']['#weight'] = 40;
+  }
+}
+
+/**
+ * Implements hook_user_cancel().
+ */
+function fontanalib_user_cancel($edit, $account, $method) {
+  switch ($method) {
+    case 'user_cancel_designate':
+      $entities = \Drupal::config('fontanalib.settings')->get('entities');
+      foreach($entities as $entity){
+      if (!isset($edit['user_cancel_reassign_to']) || !isset($edit['user_cancel_reassign_to'][$entity]) || empty($edit['user_cancel_reassign_to'][$entity])) {
+        $message = t('Please select a user to reassign each type of content to.');
+        \Drupal::messenger()->addError($message, TRUE);
+        return FALSE;
+      } else if($account->id() === $edit['user_cancel_reassign_to'][$entity]) {
+        $message = t('Can not reassign node content to user account being cancelled. Please select a valid user to assign content to.');
+        \Drupal::messenger()->addError($message, TRUE);
+        return FALSE;
+      }
+      $new_user = User::load($edit['user_cancel_reassign_to'][$entity]);
+      $vids = \Drupal::entityTypeManager()->getStorage($entity)->userRevisionIds($account);//\Drupal::entityManager()->getStorage($entity)->userRevisionIds($account);
+      switch($entity){
+        case 'node':
+          module_load_include('inc', 'node', 'node.admin');
+          node_mass_update($vids, [
+            'uid' => $edit['user_cancel_reassign_to']['node'],
+            'revision_uid' => $edit['user_cancel_reassign_to']['node'],
+          ], NULL, TRUE, TRUE);
+          $message = t('Nodes from cancelled account have been assigned to @user.', ['@user' => $new_user->getDisplayName()]);
+          \Drupal::messenger()->addStatus($message, TRUE);
+          break;
+        default:
+          module_load_include('inc', 'fontanalib', 'fontanalib.admin');
+          entity_mass_update($vids, [
+            'uid' => $edit['user_cancel_reassign_to'][$entity],
+            'revision_uid' => $edit['user_cancel_reassign_to'][$entity],
+          ], NULL, TRUE, TRUE);
+          $message = t('@type entities from cancelled account have been assigned to @user.', ['@user' => $new_user->getDisplayName(), '@type' => $entity]);
+          \Drupal::messenger()->addStatus($message, TRUE);
+          break;
+      }
+    } break;  
+  }
+}
+/**
+ * Implements hook_toolbar().
+ */
+function fontanalib_toolbar() {
+
+  $items = [];
+
+  $links['settings'] = [
+    '#type' => 'link',
+    '#title' => t('Settings'),
+    '#url' => Url::fromRoute('fontanalib.settings'),
+    '#attributes' => [
+      'class' => 'toolbar-icon toolbar-icon-system-admin-config',
+    ],
+
+  ];
+
+  $items['fontanalib'] = [
+    '#type' => 'toolbar_item',
+    'tab' => [
+      '#type' => 'link',
+      '#title' => t('Fontanalib'),
+      '#url' => Url::fromRoute('fontanalib.settings'),
+      '#options' => [
+        'attributes' => [
+          'title' => t('Fontanaliv'),
+          'class' => 'trigger toolbar-item toolbar-icon toolbar-icon-system-admin-structure',
+        ],
+      ],
+    ],
+    'tray' => [
+      '#heading' => t('Fontanalib sections'),
+      'links' => [
+        '#theme' => 'item_list',
+        '#items' => $links,
+      ],
+
+    ],
+    '#weight' => -10,
+  ];
+
+  return $items;
+}

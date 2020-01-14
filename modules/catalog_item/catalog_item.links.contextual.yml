@@ -1,0 +1,10 @@
+entity.catalog_item.edit_form:
+  route_name: entity.catalog_item.edit_form
+  group: catalog_item
+  title: Edit
+
+entity.catalog_item.delete_form:
+  route_name: entity.catalog_item.delete_form
+  group: catalog_item
+  title: Delete
+  weight: 10

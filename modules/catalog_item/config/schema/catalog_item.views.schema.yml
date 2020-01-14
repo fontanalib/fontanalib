@@ -1,0 +1,268 @@
+# Schema for the views plugins of the catalog_item module.
+
+views.area.catalog_item_listing_empty:
+  type: views_area
+  label: 'catalog item link'
+
+views.argument.catalog_item_id:
+  type: views_argument
+  label: 'catalog item ID'
+  mapping:
+    break_phrase:
+      type: boolean
+      label: 'Allow multiple values'
+    not:
+      type: boolean
+      label: 'Exclude'
+
+views.argument.catalog:
+  type: views_argument
+  label: 'Catalog'
+  mapping:
+    glossary:
+      type: boolean
+      label: 'Glossary mode'
+    limit:
+      type: integer
+      label: 'Character limit'
+    case:
+      type: string
+      label: 'Case'
+    path_case:
+      type: string
+      label: 'Case in path'
+    transform_dash:
+      type: boolean
+      label: 'Transform spaces to dashes in URL'
+    break_phrase:
+      type: boolean
+      label: 'Allow multiple values'
+    add_table:
+      type: boolean
+      label: 'Allow multiple filter values to work together'
+    require_value:
+      type: boolean
+      label: 'Do not display items with no value in summary'
+
+views.argument.catalog_item_uid_revision:
+  type: views_argument
+  label: 'catalog item user ID'
+  mapping:
+    break_phrase:
+      type: boolean
+      label: 'Allow multiple values'
+    not:
+      type: boolean
+      label: 'Exclude'
+
+views.argument.catalog_item_vid:
+  type: views_argument
+  label: 'catalog item revision ID'
+  mapping:
+    break_phrase:
+      type: boolean
+      label: 'Allow multiple values'
+    not:
+      type: boolean
+      label: 'Exclude'
+# Views argument plugins for Taxonomy module.
+views.argument.catalog_taxonomy_index_tid:
+  type: views.argument.many_to_one
+  label: 'Taxonomy term ID (Catalog)'
+
+views.argument.catalog_taxonomy_index_tid_depth:
+  type: views_argument
+  label: 'Taxonomy term ID (Catalog)'
+  mapping:
+    depth:
+      type: integer
+      label: 'Depth'
+    break_phrase:
+      type: boolean
+      label: 'Allow multiple values'
+    use_taxonomy_term_path:
+      type: boolean
+      label: 'Use taxonomy term path'
+
+views.argument.catalog_taxonomy_index_tid_depth_modifier:
+  type: views_argument
+  label: 'Taxonomy depth modifier (Catalog)'
+
+# views.argument_default.catalog_taxonomy_tid:
+#   type: mapping
+#   label: 'Taxonomy term ID from URL (Catalog)'
+#   mapping:
+#     term_page:
+#       type: string
+#       label: 'Load default filter from term page'
+#     catalog_item:
+#       type: boolean
+#       label: 'Load default filter from catalog_item page, that''s good for related taxonomy blocks'
+#     limit:
+#       type: boolean
+#       label: 'Limit terms by vocabulary'
+#     vids:
+#       type: sequence
+#       label: 'Vocabularies'
+#       sequence:
+#         type: string
+#         label: 'Vocabulary'
+#     anyall:
+#       type: string
+#       label: 'Multiple-value handling'
+# Views field plugins.
+views.field.catalog_item:
+  type: views_field
+  label: 'catalog item'
+  mapping:
+    link_to_catalog_item:
+      type: boolean
+      label: 'Link this field to the original piece of content'
+
+views.field.catalog_item_bulk_form:
+  type: views_field_bulk_form
+  label: 'catalog item bulk form'
+
+views.field.catalog_item_path:
+  type: views_field
+  label: 'catalog item path'
+  mapping:
+    absolute:
+      type: boolean
+      label: 'Use absolute link (begins with "http://")'
+
+views.field.catalog_item_revision_link:
+  type: views_field
+  label: 'Link to a catalog item revision'
+  mapping:
+    text:
+      type: label
+      label: 'Text to display'
+
+views.field.catalog_item_revision_link_delete:
+  type: views_field
+  label: 'Link to delete a catalog item revision'
+  mapping:
+    text:
+      type: label
+      label: 'Text to display'
+
+views.field.catalog_item_revision_link_revert:
+  type: views_field
+  label: 'Link to revert a catalog item to a revision'
+  mapping:
+    text:
+      type: label
+      label: 'Text to display'
+# Views field plugins for Taxonomy module.
+views.field.catalog_taxonomy_index_tid:
+  type: views_field
+  label: 'Taxonomy language (catalog)'
+  mapping:
+    type:
+      type: string
+      label: 'Display type'
+    separator:
+      type: string
+      label: 'Separator'
+    link_to_taxonomy:
+      type: boolean
+      label: 'Link this field to its term page'
+    limit:
+      type: boolean
+      label: 'Limit terms by vocabulary'
+    vids:
+      type: sequence
+      label: 'Vocabularies'
+      sequence:
+        type: string
+        label: 'Vocabulary'
+# Views filter plugins.
+views.filter.catalog_item_access:
+  type: views_filter
+  label: 'Catalog_item access'
+
+views.filter.catalog_item_status:
+  type: views_filter
+  label: 'Catalog_item status'
+
+views.filter.catalog_item_uid_revision:
+  type: views_filter
+  label: 'Catalog_item revisions of an user'
+  mapping:
+    operator:
+      type: string
+      label: 'Operator'
+    value:
+      type: sequence
+      label: 'Values'
+      sequence:
+        type: string
+        label: 'Value'
+    expose:
+      type: mapping
+      label: 'Expose'
+      mapping:
+        reduce:
+          type: boolean
+          label: 'Reduce'
+
+views.filter_value.catalog_item_access:
+  type: string
+  label: 'Access'
+
+views.filter_value.catalog_item_status:
+  type: boolean
+  label: 'Status'
+
+views.row.catalog_item_rss:
+  type: views_row
+  label: 'Content options'
+  mapping:
+    view_mode:
+      type: string
+      label: 'Display type'
+# Views filter plugins for Taxonomy module.
+views.filter.catalog_taxonomy_index_tid:
+  type: views.filter.many_to_one
+  label: 'Taxonomy term ID (Catalog item)'
+  mapping:
+    vid:
+      type: string
+      label: 'Vocabulary'
+    type:
+      type: string
+      label: 'Selection type'
+    hierarchy:
+      type: boolean
+      label: 'Show hierarchy in dropdown'
+    limit:
+      type: boolean
+      label: 'Limit to vocabulary'
+    error_message:
+      type: boolean
+      label: 'Display error message'
+    value:
+      type: sequence
+      label: 'Values'
+      sequence:
+        type: integer
+        label: 'Value'
+views.filter.catalog_taxonomy_index_tid_depth:
+  type: views.filter.catalog_taxonomy_index_tid
+  label: 'Taxonomy term ID with depth (catalog item)'
+  mapping:
+    depth:
+      type: integer
+      label: 'Depth'
+# Views relationship plugins for Taxonomy module.
+views.relationship.catalog_item_term_data:
+  type: views_relationship
+  label: 'Taxonomy term (catalog item)'
+  mapping:
+    vids:
+      type: sequence
+      label: 'Vocabularies'
+      sequence:
+        type: string
+        label: 'Vocabulary'

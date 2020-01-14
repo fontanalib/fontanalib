@@ -1,0 +1,30 @@
+entity.catalog_item.canonical:
+  route_name: entity.catalog_item.canonical
+  base_route: entity.catalog_item.canonical
+  title: 'View'
+entity.catalog_item.edit_form:
+  route_name: entity.catalog_item.edit_form
+  base_route: entity.catalog_item.canonical
+  title: Edit
+entity.catalog_item.delete_form:
+  route_name: entity.catalog_item.delete_form
+  base_route: entity.catalog_item.canonical
+  title: Delete
+  weight: 10
+entity.catalog_item.version_history:
+  route_name: entity.catalog_item.version_history
+  base_route: entity.catalog_item.canonical
+  title: 'Revisions'
+  weight: 20
+entity.catalog.edit_form:
+  title: 'Edit'
+  route_name: entity.catalog.edit_form
+  base_route: entity.catalog.edit_form
+entity.catalog.collection:
+  title: List
+  route_name: entity.catalog.collection
+  base_route: entity.catalog.collection
+catalog_item.admin:
+  route_name: catalog_item.admin
+  title: Catalog
+  base_route: system.admin_content

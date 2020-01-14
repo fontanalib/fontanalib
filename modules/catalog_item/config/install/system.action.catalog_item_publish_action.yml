@@ -1,0 +1,10 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - catalog_item
+id: catalog_item_publish_action
+label: 'Publish catalog item'
+type: catalog_item
+plugin: entity:publish_action:catalog_item
+configuration: {  }

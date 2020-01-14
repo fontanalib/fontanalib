@@ -1,0 +1,28 @@
+bypass catalog access:
+  title: 'Bypass catalog access control'
+  description: 'View, edit and delete all catalog items regardless of permission restrictions.'
+  restrict access: true
+administer catalogs:
+  title: 'Administer catalog types'
+  description: 'Maintain the types of catalogs available and the fields that are associated with those types.'
+  restrict access: true
+administer catalog items:
+  title: 'Administer catalog items'
+  description: 'Promote, change ownership, edit revisions, and perform other tasks across all catalogs.'
+  restrict access: true
+access catalog overview:
+  title: 'Access the Catalog overview page'
+view own unpublished catalog items:
+  title: 'View own unpublished catalog items'
+view all catalog revisions:
+  title: 'View all catalog revisions'
+  description: 'To view a revision, you also need permission to view the catalog item.'
+revert all catalog revisions:
+  title: 'revert all catalog revisions'
+  description: 'To revert a revision, you also need permission to edit the catalog item.'
+delete all catalog revisions:
+  title: 'Delete all catalog revisionss'
+  description: 'To delete a revision, you also need permission to delete the catalog item.'
+
+permission_callbacks:
+  - \Drupal\catalog_item\CatalogItemPermissions::catalogPermissions

@@ -1,0 +1,31 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.catalog_item.field_catalog_creator
+    - catalog_item.catalog.evergreen
+    - paragraphs.paragraphs_type.creator
+  module:
+    - entity_reference_revisions
+    - catalog_item
+id: catalog_item.evergreen.field_catalog_creator
+field_name: field_catalog_creator
+entity_type: catalog_item
+bundle: evergreen
+label: Creator
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:paragraph'
+  handler_settings:
+    negate: 0
+    target_bundles:
+      creator: creator
+    target_bundles_drag_drop:
+      creator:
+        enabled: true
+        weight: 2
+field_type: entity_reference_revisions

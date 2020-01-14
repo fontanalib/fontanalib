@@ -1,0 +1,99 @@
+{#
+/**
+ * @file
+ * Default theme implementation to display a catalog_item.
+ *
+ * Available variables:
+ * - catalog_item: The catalog_item entity with limited access to object properties and methods.
+ *   Only method names starting with "get", "has", or "is" and a few common
+ *   methods such as "id", "label", and "bundle" are available. For example:
+ *   - catalog_item.getCreatedTime() will return the catalog_item creation timestamp.
+ *   - catalog_item.hasField('field_example') returns TRUE if the catalog_item bundle includes
+ *     field_example. (This does not indicate the presence of a value in this
+ *     field.)
+ *   - catalog_item.isPublished() will return whether the catalog_item is published or not.
+ *   Calling other methods, such as catalog_item.delete(), will result in an exception.
+ *   See \Drupal\catalog_item\Entity\CatalogItem for a full list of public properties and
+ *   methods for the catalog_item object.
+ * - label: (optional) The title of the catalog_item.
+ * - content: All catalog_item items. Use {{ content }} to print them all,
+ *   or print a subset such as {{ content.field_example }}. Use
+ *   {{ content|without('field_example') }} to temporarily suppress the printing
+ *   of a given child element.
+ * - curator_picture: The catalog_item curator user entity, rendered using the "compact"
+ *   view mode.
+ * - metadata: Metadata for this catalog_item.
+ * - date: (optional) Themed creation date field.
+ * - curator_name: (optional) Themed curator name field.
+ * - url: Direct URL of the current catalog_item.
+ * - display_submitted: Whether submission information should be displayed.
+ * - attributes: HTML attributes for the containing element.
+ *   The attributes.class element may contain one or more of the following
+ *   classes:
+ *   - catalog-item: The current template type (also known as a "theming hook").
+ *   - catalog-item--type-[type]: The current catalog_item type. For example, if the catalog_item is an
+ *     "Article" it would result in "catalog-item--type-article". Note that the machine
+ *     name will often be in a short form of the human readable label.
+ *   - catalog-item--view-mode-[view_mode]: The View Mode of the catalog-item; for example, a
+ *     teaser would result in: "catalog-item--view-mode-teaser", and
+ *     full: "catalog-item--view-mode-full".
+ *   The following are controlled through the catalog-item publishing options.
+ *   - catalog-item--promoted: Appears on catalog-items promoted to the front page.
+ *   - catalog-item--sticky: Appears on catalog-items ordered above other non-sticky catalog-items in
+ *     teaser listings.
+ *   - catalog-item--unpublished: Appears on unpublished catalog-items visible only to site
+ *     admins.
+ * - title_attributes: Same as attributes, except applied to the main title
+ *   tag that appears in the template.
+ * - content_attributes: Same as attributes, except applied to the main
+ *   content tag that appears in the template.
+ * - curator_attributes: Same as attributes, except applied to the curator of
+ *   the catalog-item tag that appears in the template.
+ * - title_prefix: Additional output populated by modules, intended to be
+ *   displayed in front of the main title tag that appears in the template.
+ * - title_suffix: Additional output populated by modules, intended to be
+ *   displayed after the main title tag that appears in the template.
+ * - view_mode: View mode; for example, "teaser" or "full".
+ * - teaser: Flag for the teaser state. Will be true if view_mode is 'teaser'.
+ * - page: Flag for the full page state. Will be true if view_mode is 'full'.
+ * - readmore: Flag for more state. Will be true if the teaser content of the
+ *   catalog-item cannot hold the main body content.
+ * - logged_in: Flag for authenticated user status. Will be true when the
+ *   current user is a logged-in member.
+ * - is_admin: Flag for admin user status. Will be true when the current user
+ *   is an administrator.
+ *
+ * @see template_preprocess_catalog_item()
+ *
+ * @todo Remove the id attribute (or make it a class), because if that gets
+ *   rendered twice on a page this is invalid CSS for example: two lists
+ *   in different view modes.
+ *
+ * @ingroup themeable
+ */
+#}
+<article{{ attributes }}>
+
+  {{ title_prefix }}
+  {% if label and not page %}
+    <h2{{ title_attributes }}>
+      <a href="{{ url }}" rel="bookmark">{{ label }}</a>
+    </h2>
+  {% endif %}
+  {{ title_suffix }}
+
+  {% if display_submitted %}
+    <footer>
+      {{ curator_picture }}
+      <div{{ curator_attributes }}>
+        {% trans %}Submitted by {{ curator_name }} on {{ date }}{% endtrans %}
+        {{ metadata }}
+      </div>
+    </footer>
+  {% endif %}
+
+  <div{{ content_attributes }}>
+    {{ content }}
+  </div>
+
+</article>

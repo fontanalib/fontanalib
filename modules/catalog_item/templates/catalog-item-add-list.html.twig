@@ -1,0 +1,32 @@
+{#
+/**
+ * @file
+ * Default theme implementation to list catalog types available for adding catalog items.
+ *
+ * This list is displayed on the Add catalog item admin page.
+ *
+ * Available variables:
+ * - catalogs: A list of catalogs, each with the following properties:
+ *   - add_link: Link to create a piece of content of this type.
+ *   - description: Description of this type of content.
+ *
+ * @see template_preprocess_catalog_item_add_list()
+ *
+ * @ingroup themeable
+ */
+#}
+{% if catalogs is not empty %}
+  <dl>
+    {% for type in catalogs %}
+      <dt>{{ type.add_link }}</dt>
+      <dd>{{ type.description }}</dd>
+    {% endfor %}
+  </dl>
+{% else %}
+  <p>
+    {% set create_content = path('catalog_item.catalog_add') %}
+    {% trans %}
+      You have not created any catalogs yet. Go to the <a href="{{ create_content }}">catalog creation page</a> to add a new catalog type.
+    {% endtrans %}
+  </p>
+{% endif %}

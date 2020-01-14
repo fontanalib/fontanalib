@@ -1,0 +1,11 @@
+catalog_item.catalog_add:
+  route_name: catalog_item.catalog_add
+  title: 'Add catalog'
+  appears_on:
+    - entity.catalog.collection
+catalog_item.add_page:
+  route_name: catalog_item.add_page
+  title: 'Add catalog item'
+  appears_on:
+    - system.admin_content
+    - catalog_item.admin

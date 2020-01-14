@@ -1,0 +1,10 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - catalog_item
+    - taxonomy
+name: Audience
+vid: audience
+description: 'Use audience to group content on similar age-group identifiers.'
+weight: 0

@@ -1,0 +1,8 @@
+entity.catalog.collection:
+  title: 'Catalogs'
+  parent: system.admin_structure
+  description: 'Create and manage fields, forms, and display settings for your catalog.'
+  route_name: entity.catalog.collection
+catalog_item.add_page:
+  title: 'Add catalog items'
+  route_name: catalog_item.add_page

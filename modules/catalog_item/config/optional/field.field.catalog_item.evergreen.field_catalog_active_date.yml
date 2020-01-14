@@ -1,0 +1,21 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.catalog_item.field_catalog_active_date
+    - catalog_item.catalog.evergreen
+  module:
+    - datetime
+    - catalog_item
+id: catalog_item.evergreen.field_catalog_active_date
+field_name: field_catalog_active_date
+entity_type: catalog_item
+bundle: evergreen
+label: 'Active Date'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: datetime

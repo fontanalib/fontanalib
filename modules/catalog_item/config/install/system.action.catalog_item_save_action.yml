@@ -1,0 +1,10 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - catalog_item
+id: catalog_item_save_action
+label: 'Save catalog item'
+type: catalog_item
+plugin: entity:save_action:catalog_item
+configuration: {  }

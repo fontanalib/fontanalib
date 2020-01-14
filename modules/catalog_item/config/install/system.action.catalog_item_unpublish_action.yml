@@ -1,0 +1,10 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - catalog_item
+id: catalog_item_unpublish_action
+label: 'Unpublish catalog item'
+type: catalog_item
+plugin: entity:unpublish_action:catalog_item
+configuration: {  }

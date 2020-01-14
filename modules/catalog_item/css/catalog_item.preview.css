@@ -1,0 +1,22 @@
+/**
+ * @file
+ * Styles for catalog_item preview page.
+ */
+
+.catalog_item-preview-container {
+  position: fixed;
+  z-index: 499;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 10px;
+}
+
+@media only screen and (min-width: 36em) {
+  .catalog_item-preview-container .form-type-select {
+    margin-left: 25%; /* LTR */
+  }
+  [dir="rtl"] .catalog_item-preview-container .form-type-select {
+    margin-right: 25%;
+    margin-left: 0;
+  }
+}

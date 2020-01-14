@@ -1,0 +1,11 @@
+langcode: en
+status: true
+dependencies: {  }
+name: Evergreen
+type: evergreen
+description: 'The <em>Evergreen</em> catalog serves Fontana Regional Library and NC Cardinal, a consortium of libraries across North Carolina. Library users who have a library card in good standing at any member library of the NC Cardinal Consortium have borrowing privileges at all NC Cardinal libraries. Library users may place holds on items from any library within the consortium using the Evergreen Catalog and have it delivered to their local library.'
+help: ''
+new_revision: false
+preview_mode: 0
+display_submitted: false
+module: catalog_item

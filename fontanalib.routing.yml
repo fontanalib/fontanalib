@@ -1,0 +1,7 @@
+fontanalib.settings:
+  path: '/admin/fontanalib/settings'
+  defaults:
+    _title: 'Fontanalib Settings'
+    _form: 'Drupal\fontanalib\Form\ConfigForm'
+  requirements:
+    _permission: 'administer site configuration'

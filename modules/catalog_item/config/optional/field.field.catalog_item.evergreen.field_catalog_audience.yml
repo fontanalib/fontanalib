@@ -1,0 +1,30 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.catalog_item.field_catalog_audience
+    - catalog_item.catalog.evergreen
+    - taxonomy.vocabulary.audience
+  module:
+    - catalog_item
+id: catalog_item.evergreen.field_catalog_audience
+field_name: field_catalog_audience
+entity_type: catalog_item
+bundle: evergreen
+label: Audience
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      audience: audience
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

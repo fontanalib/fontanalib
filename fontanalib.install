@@ -1,0 +1,6 @@
+<?php
+
+function fontanalib_install(){
+  $config = \Drupal::service('config.factory')->getEditable('fontanalib.settings');
+  $config->set('entities', array('node'))->save();
+}

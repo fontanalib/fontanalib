@@ -1,0 +1,150 @@
+catalog_item.admin:
+  path: '/admin/content/catalog'
+  defaults:
+    _title: 'Catalog'
+    _entity_list: 'catalog_item'
+  requirements:
+    _permission: 'access catalog overview'
+catalog_item.multiple_delete_confirm:
+  path: '/admin/content/catalog-item/delete'
+  defaults:
+    _form: '\Drupal\catalog_item\Form\DeleteMultiple'
+    entity_type_id: 'catalog_item'
+  requirements:
+    _entity_delete_multiple_access: 'catalog_item'
+
+entity.catalog_item.delete_multiple_form:
+  path: '/admin/content/catalog-item/delete'
+  defaults:
+    _form: '\Drupal\catalog_item\Form\DeleteMultiple'
+    entity_type_id: 'catalog_item'
+  requirements:
+    _entity_delete_multiple_access: 'catalog_item'
+
+catalog_item.add_page:
+  path: '/catalog-item/add'
+  defaults:
+    _title: 'Add catalog item'
+    _controller: '\Drupal\catalog_item\Controller\CatalogItemController::addPage'
+  options:
+    _catalog_item_operation_route: TRUE
+  requirements:
+    _catalog_item_add_access: 'catalog_item'
+
+catalog_item.add:
+  path: '/catalog-item/add/{catalog}'
+  defaults:
+    _entity_form: 'catalog_item.default'
+    _title_callback: '\Drupal\catalog_item\Controller\CatalogItemController::addPageTitle'
+  requirements:
+    _catalog_item_add_access: 'catalog_item:{catalog}'
+  options:
+    _catalog_item_operation_route: TRUE
+    parameters:
+      catalog:
+        type: entity:catalog
+        with_config_overrides: TRUE
+
+entity.catalog_item.preview:
+  path: '/catalog-item/preview/{catalog_item_preview}/{view_mode_id}'
+  defaults:
+    _controller: '\Drupal\catalog_item\Controller\CatalogItemPreviewController::view'
+    _title_callback: '\Drupal\catalog_item\Controller\CatalogItemPreviewController::title'
+  requirements:
+    _catalog_item_preview_access: '{catalog_item_preview}'
+  options:
+    parameters:
+      catalog_item_preview:
+        type: 'catalog_item_preview'
+
+entity.catalog_item.version_history:
+  path: '/catalog-item/{catalog_item}/revisions'
+  defaults:
+    _title: 'Revisions'
+    _controller: '\Drupal\catalog_item\Controller\CatalogItemController::revisionOverview'
+  requirements:
+    _access_catalog_item_revision: 'view'
+    catalog_item: \d+
+  options:
+    _catalog_item_operation_route: TRUE
+
+entity.catalog_item.revision:
+  path: '/catalog-item/{catalog_item}/revisions/{catalog_item_revision}/view'
+  defaults:
+    _controller: '\Drupal\catalog_item\Controller\CatalogItemController::revisionShow'
+    _title_callback: '\Drupal\catalog_item\Controller\CatalogItemController::revisionPageTitle'
+  requirements:
+    _access_catalog_item_revision: 'view'
+    catalog_item: \d+
+
+catalog_item.revision_revert_confirm:
+  path: '/catalog-item/{catalog_item}/revisions/{catalog_item_revision}/revert'
+  defaults:
+    _form: '\Drupal\catalog_item\Form\CatalogItemRevisionRevertForm'
+    _title: 'Revert to earlier revision'
+  requirements:
+    _access_catalog_item_revision: 'update'
+    catalog_item: \d+
+  options:
+    _catalog_item_operation_route: TRUE
+
+catalog_item.revision_revert_translation_confirm:
+  path: '/catalog-item/{catalog_item}/revisions/{catalog_item_revision}/revert/{langcode}'
+  defaults:
+    _form: '\Drupal\catalog_item\Form\CatalogItemRevisionRevertTranslationForm'
+    _title: 'Revert to earlier revision of a translation'
+  requirements:
+    _access_catalog_item_revision: 'update'
+    catalog_item: \d+
+  options:
+    _catalog_item_operation_route: TRUE
+
+catalog_item.revision_delete_confirm:
+  path: '/catalog-item/{catalog_item}/revisions/{catalog_item_revision}/delete'
+  defaults:
+    _form: '\Drupal\catalog_item\Form\CatalogItemRevisionDeleteForm'
+    _title: 'Delete earlier revision'
+  requirements:
+    _access_catalog_item_revision: 'delete'
+    catalog_item: \d+
+  options:
+    _catalog_item_operation_route: TRUE
+
+entity.catalog.collection:
+  path: '/admin/structure/catalogs'
+  defaults:
+    _entity_list: 'catalog'
+    _title: 'Catalogs'
+  requirements:
+    _permission: 'administer catalogs'
+
+catalog_item.catalog_add:
+  path: '/admin/structure/catalogs/add'
+  defaults:
+    _entity_form: 'catalog.add'
+    _title: 'Add catalog'
+  requirements:
+    _permission: 'administer catalogs'
+
+entity.catalog.edit_form:
+  path: '/admin/structure/catalogs/manage/{catalog}'
+  defaults:
+    _entity_form: 'catalog.edit'
+    _title_callback: '\Drupal\Core\Entity\Controller\EntityController::title'
+  requirements:
+    _permission: 'administer catalogs'
+
+entity.catalog.delete_form:
+  path: '/admin/structure/catalogs/manage/{catalog}/delete'
+  defaults:
+    _entity_form: 'catalog.delete'
+    _title: 'Delete'
+  requirements:
+    _entity_access: 'catalog.delete'
+
+catalog_item.configure_rebuild_confirm:
+  path: '/admin/reports/status/rebuild'
+  defaults:
+    _form: '\Drupal\catalog_item\Form\RebuildPermissionsForm'
+  requirements:
+    _permission: 'access administration pages'

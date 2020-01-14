@@ -1,0 +1,45 @@
+drupal.catalog_item:
+  version: VERSION
+  css:
+    layout:
+      css/catalog_item.module.css: {}
+  js:
+    catalog_item.js: {}
+  dependencies:
+    - core/drupal.entity-form
+    - core/drupalSettings
+
+drupal.catalog_item.preview:
+  version: VERSION
+  css:
+    theme:
+      css/catalog_item.preview.css: {}
+  js:
+    catalog_item.preview.js: {}
+  dependencies:
+    - core/jquery
+    - core/jquery.once
+    - core/drupal
+    - core/drupal.dialog
+    - core/drupal.form
+
+drupal.catalogs:
+  version: VERSION
+  js:
+    catalogs.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/drupal.form
+
+form:
+  version: VERSION
+  css:
+    layout:
+      css/catalog_item.module.css: {}
+
+drupal.catalog_item.admin:
+  version: VERSION
+  css:
+    theme:
+      css/catalog_item.admin.css: {}

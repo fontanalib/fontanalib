@@ -1,0 +1,12 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - catalog_item
+id: catalog_item_search
+label: Catalog
+path: catalog_item
+weight: -10
+plugin: catalog_item_search
+configuration:
+  rankings: {  }

@@ -1,0 +1,10 @@
+fontanalib.settings_main_tab:
+  title: 'Fontanalib Settings'
+  base_route: fontanalib.settings
+  route_name: fontanalib.settings
+
+fontanalib.settings:
+  title: 'Fontanalib General Settings'
+  route_name: fontanalib.settings
+  description: 'Configure settings for Fontanalib.'
+  parent_id: fontanalib.settings_main_tab

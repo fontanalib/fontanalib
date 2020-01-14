@@ -1,0 +1,35 @@
+{#
+/**
+ * @file
+ * Default theme implementation for a catalog_item edit form.
+ *
+ * Two column template for the catalog_item add/edit form.
+ *
+ * This template will be used when a catalog_item edit form specifies 'catalog_item_edit_form'
+ * as its #theme callback.  Otherwise, by default, catalog_item add/edit forms will be
+ * themed by form.html.twig.
+ *
+ * Available variables:
+ * - form: The catalog_item add/edit form.
+ *
+ * @see seven_form_catalog_item_form_alter()
+ *
+ * @ingroup themeable
+ */
+#}
+{# {{ form }} #}
+<div class="layout-catalog_item-form catalog-item clearfix">
+  <div class="layout-region layout-region-catalog_item-main">
+    {{ form|without('advanced', 'footer', 'actions') }}
+  </div>
+  <div class="layout-region layout-region-catalog_item-secondary">
+    {{ form.advanced }}
+  </div>
+  <div class="layout-region layout-region-catalog_item-footer">
+    <div class="layout-region-catalog_item-footer__content">
+      {{ form.footer }}
+      {{ form.actions }}
+    </div>
+  </div>
+</div>
+

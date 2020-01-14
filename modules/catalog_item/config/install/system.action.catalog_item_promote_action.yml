@@ -1,0 +1,10 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - catalog_item
+id: catalog_item_promote_action
+label: 'Promote catalog item to front page'
+type: catalog_item
+plugin: catalog_item_promote_action
+configuration: {  }

@@ -1,0 +1,102 @@
+/**
+ * @file
+ * Styles for administration pages.
+ */
+
+/**
+ * Catalog_item add/edit form layout
+ */
+
+/* Narrow screens */
+.layout-region {
+  box-sizing: border-box;
+}
+
+/* Wide screens */
+@media
+  screen and (min-width: 780px),
+  (orientation: landscape) and (min-device-height: 780px) {
+
+  .layout-region-catalog_item-main,
+  .layout-region-catalog_item-footer {
+    float: left; /* LTR */
+    box-sizing: border-box;
+    width: 65%;
+    padding-right: 2em; /* LTR */
+  }
+
+  [dir="rtl"] .layout-region-catalog_item-main,
+  [dir="rtl"] .layout-region-catalog_item-footer {
+    float: right;
+    padding-right: 0;
+    padding-left: 2em;
+  }
+
+  .layout-region-catalog_item-secondary {
+    float: right; /* LTR */
+    width: 35%;
+  }
+
+  [dir="rtl"] .layout-region-catalog_item-secondary {
+    float: left;
+  }
+
+  /* @todo File an issue to add a standard class to all text-like inputs */
+  .layout-region-catalog_item-secondary .form-autocomplete,
+  .layout-region-catalog_item-secondary .form-text,
+  .layout-region-catalog_item-secondary .form-tel,
+  .layout-region-catalog_item-secondary .form-email,
+  .layout-region-catalog_item-secondary .form-url,
+  .layout-region-catalog_item-secondary .form-search,
+  .layout-region-catalog_item-secondary .form-number,
+  .layout-region-catalog_item-secondary .form-color,
+  .layout-region-catalog_item-secondary textarea {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+/**
+ * The vertical toolbar mode gets triggered for narrow screens, which throws off
+ * the intent of media queries written for the viewport width. When the vertical
+ * toolbar is on, we need to suppress layout for the original media width + the
+ * toolbar width (240px). In this case, 240px + 780px.
+ */
+@media
+  screen and (max-width: 1020px) {
+
+  .toolbar-vertical.toolbar-tray-open .layout-region-catalog_item-main,
+  .toolbar-vertical.toolbar-tray-open .layout-region-catalog_item-footer,
+  .toolbar-vertical.toolbar-tray-open .layout-region-catalog_item-secondary {
+    float: none;
+    width: auto;
+    padding-right: 0;
+  }
+}
+.layout-region-catalog_item-footer__content {
+  margin-top: 1.5em;
+  padding-top: 0.5em;
+  border-top: 1px solid #bebfb9;
+}
+
+/**
+ * Widescreen
+ *
+ * Both of the following media queries must *exactly* match what is in
+ * catalog_item.module.css. This is rather crazy.
+ *
+ * @todo Figure out how to reduce media query duplication across files
+ *       and modules. Layout styles only allowed in themes?
+ */
+@media
+  screen and (min-width: 780px),
+  (orientation: landscape) and (min-device-height: 780px) {
+  .catalog_item-form-layout .messages {
+    margin-top: 1em;
+    margin-bottom: 1em;
+  }
+  .layout-region-catalog_item-footer__content {
+    margin-top: 0.5em;
+  }
+}
