@@ -82,7 +82,18 @@ function fontanalib_form_alter(&$form, $form_state, $form_id) {
     $form['user_cancel_reassign_to']['#weight'] = 20;
     $form['user_cancel_confirm']['#weight'] = 30;
     $form['description']['#weight'] = 40;
-  }
+  } 
+  // else if($form_id === 'nodeaccess_admin_settings'){
+  //   $node_types = NodeType::loadMultiple();
+  //   $roles = \Drupal::entityTypeManager()->getStorage('user_role')->loadMultiple();
+  //   // Generate fieldsets for each node type.
+  //   foreach ($node_types as $type => $bundle) {
+  //     $form[$type]['access_config_permissions'] = [
+  //       '#type' => 'table',
+  //       '#header' => $header,
+  //     ];
+
+  // }
 }
 
 /**
