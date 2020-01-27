@@ -5,15 +5,14 @@ dependencies:
     module:
       - catalog_item
   module:
-    - entity_reference_revisions
-    - paragraphs
-id: catalog_item.field_catalog_identifier
-field_name: field_catalog_identifier
+    - taxonomy
+id: catalog_item.field_featured_collection
+field_name: field_featured_collection
 entity_type: catalog_item
-type: entity_reference_revisions
+type: entity_reference
 settings:
-  target_type: paragraph
-module: entity_reference_revisions
+  target_type: taxonomy_term
+module: core
 locked: false
 cardinality: -1
 translatable: true

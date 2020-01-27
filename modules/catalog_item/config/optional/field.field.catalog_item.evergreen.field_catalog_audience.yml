@@ -5,8 +5,9 @@ dependencies:
     - field.storage.catalog_item.field_catalog_audience
     - catalog_item.catalog.evergreen
     - taxonomy.vocabulary.audience
-  module:
-    - catalog_item
+  enforced:
+    module:
+      - catalog_item
 id: catalog_item.evergreen.field_catalog_audience
 field_name: field_catalog_audience
 entity_type: catalog_item

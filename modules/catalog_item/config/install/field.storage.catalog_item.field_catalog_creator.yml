@@ -1,9 +1,11 @@
 langcode: en
 status: true
 dependencies:
+  enforced:
+    module:
+      - catalog_item
   module:
     - entity_reference_revisions
-    - catalog_item
     - paragraphs
 id: catalog_item.field_catalog_creator
 field_name: field_catalog_creator

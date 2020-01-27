@@ -2,8 +2,10 @@ langcode: en
 status: true
 dependencies:
   module:
-    - catalog_item
     - taxonomy
+  enforced:
+    module:
+      - catalog_item
 name: Audience
 vid: audience
 description: 'Use audience to group content on similar age-group identifiers.'

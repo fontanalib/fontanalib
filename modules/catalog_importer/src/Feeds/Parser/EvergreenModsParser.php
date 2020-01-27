@@ -7,7 +7,7 @@ use Drupal\feeds\Plugin\Type\Parser\ParserInterface;
 use Drupal\feeds\Plugin\Type\PluginBase;
 use Drupal\feeds\Result\FetcherResultInterface;
 use Drupal\feeds\StateInterface;
-use Drupal\catalog_importer\Feeds\Item\ResourceItem;
+use Drupal\catalog_importer\Feeds\Item\CatalogItem;
 use Drupal\feeds\Result\ParserResult;
 
 /**
@@ -31,7 +31,7 @@ class EvergreenModsParser extends PluginBase implements ParserInterface {
 
     foreach ($items->mods as $item) {
       if (!empty($item)) {
-        $yourItem = new ResourceItem();
+        $yourItem = new CatalogItem();
         // Process out the $item into an easily usable data set.
         $yourItem->set('catalog', 'evergreen');
         $yourItem->set('guid', (string) $item->recordInfo->recordIdentifier[0]);

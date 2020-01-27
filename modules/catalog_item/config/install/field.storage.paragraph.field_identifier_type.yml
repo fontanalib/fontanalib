@@ -1,6 +1,9 @@
 langcode: en
 status: true
 dependencies:
+  enforced:
+    module:
+      - catalog_item
   module:
     - paragraphs
 id: paragraph.field_identifier_type

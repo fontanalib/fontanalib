@@ -4,8 +4,9 @@ dependencies:
   config:
     - field.storage.catalog_item.field_catalog_id
     - catalog_item.catalog.evergreen
-  module:
-    - catalog_item
+  enforced:
+    module:
+      - catalog_item
 id: catalog_item.evergreen.field_catalog_id
 field_name: field_catalog_id
 entity_type: catalog_item

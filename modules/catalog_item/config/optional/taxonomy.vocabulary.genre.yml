@@ -2,8 +2,10 @@ langcode: en
 status: true
 dependencies:
   module:
-    - catalog_item
     - taxonomy
+  enforced:
+    module:
+      - catalog_item
 name: Genre
 vid: genre
 description: 'Use genre to group content by common and high-interest genre terms.'

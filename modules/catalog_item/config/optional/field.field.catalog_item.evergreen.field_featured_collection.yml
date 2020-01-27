@@ -2,17 +2,17 @@ langcode: en
 status: true
 dependencies:
   config:
-    - field.storage.catalog_item.field_catalog_genre
+    - field.storage.catalog_item.field_featured_collection
     - catalog_item.catalog.evergreen
-    - taxonomy.vocabulary.genre
+    - taxonomy.vocabulary.featured_collection
   enforced:
     module:
       - catalog_item
-id: catalog_item.evergreen.field_catalog_genre
-field_name: field_catalog_genre
+id: catalog_item.evergreen.field_featured_collection
+field_name: field_featured_collection
 entity_type: catalog_item
 bundle: evergreen
-label: Genre
+label: 'Featured Collection'
 description: ''
 required: false
 translatable: false
@@ -22,10 +22,10 @@ settings:
   handler: 'default:taxonomy_term'
   handler_settings:
     target_bundles:
-      genre: genre
+      featured_collection: featured_collection
     sort:
       field: name
       direction: asc
-    auto_create: false
+    auto_create: true
     auto_create_bundle: ''
 field_type: entity_reference

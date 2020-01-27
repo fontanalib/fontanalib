@@ -1,8 +1,9 @@
 langcode: en
 status: true
 dependencies:
-  module:
-    - catalog_item
+  enforced:
+    module:
+      - catalog_item
 id: catalog_item_delete_action
 label: 'Delete catalog item'
 type: catalog_item

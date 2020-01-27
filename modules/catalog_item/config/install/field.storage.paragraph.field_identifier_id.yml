@@ -3,6 +3,9 @@ status: true
 dependencies:
   module:
     - paragraphs
+  enforced:
+    module:
+      - catalog_item
 id: paragraph.field_identifier_id
 field_name: field_identifier_id
 entity_type: paragraph

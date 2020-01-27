@@ -1,8 +1,9 @@
 langcode: en
 status: true
 dependencies:
-  module:
-    - catalog_item
+  enforced:
+    module:
+      - catalog_item
 id: catalog_item_unpromote_action
 label: 'Remove catalog item from front page'
 type: catalog_item

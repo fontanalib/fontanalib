@@ -1,9 +1,11 @@
 langcode: en
 status: true
 dependencies:
+  enforced:
+    module:
+      - catalog_item
   module:
     - datetime
-    - catalog_item
 id: catalog_item.field_catalog_active_date
 field_name: field_catalog_active_date
 entity_type: catalog_item
