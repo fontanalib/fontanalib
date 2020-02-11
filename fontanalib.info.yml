@@ -3,3 +3,5 @@ type: module
 description: 'Custom functionality for Fontana Regional Library'
 core: 8.x
 package: 'fontanalib'
+dependencies:
+  - nodeaccess:nodeaccess

@@ -1,10 +1,12 @@
 langcode: en
 status: true
 dependencies:
+  enforced:
+    module:
+      - catalog_item
   module:
     - file
     - image
-    - catalog_item
 id: catalog_item.field_catalog_image
 field_name: field_catalog_image
 entity_type: catalog_item

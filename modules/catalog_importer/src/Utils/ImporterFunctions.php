@@ -8,7 +8,7 @@ class ImporterFunctions{
      self::catalog_importer_terms_cache($vid);
   }
   public static function catalog_importer_rebuild_all_term_caches(){
-    $vocabs = \Drupal::config('catalog_importer.settings')->get('cached_vocabs');
+    $vocabs = \Drupal::config('fontanalib.settings')->get('catalog_importer_cached_vocabs');
     foreach($vocabs as $vocab){
       self::catalog_importer_rebuild_term_cache($vocab);
     }
@@ -23,7 +23,7 @@ class ImporterFunctions{
       return $cache->data;
     }
 
-    $keyword_fields = \Drupal::config('catalog_importer.settings')->get('keyword_fields');
+    $keyword_fields = \Drupal::config('fontanalib.settings')->get('catalog_importer_keyword_fields');
     $terms =\Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadTree($vid); //, 0, NULL, TRUE
     $search = array();
     foreach ($terms as $term) {
@@ -96,7 +96,7 @@ class ImporterFunctions{
       }
     }
     
-    $settings = \Drupal::config('catalog_importer.settings')->get('vocab_settings');
+    $settings = \Drupal::config('fontanalib.settings')->get('catalog_importer_vocab_settings');
     if(isset($settings[$vid]) && !empty($settings[$vid]['diff'])){
       $resourceVocabs = array_keys($settings[$vid]['diff']);
 

@@ -1,8 +1,9 @@
 langcode: en
 status: false
 dependencies:
-  module:
-    - catalog_item
+  enforced:
+    module:
+      - catalog_item
 id: catalog_item.search_index
 label: 'Search index'
 targetEntityType: catalog_item

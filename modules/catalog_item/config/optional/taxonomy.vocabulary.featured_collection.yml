@@ -1,0 +1,9 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - taxonomy
+name: 'Featured Collection'
+vid: featured_collection
+description: 'Use featured collections to group content by special and/or staff curated terms.'
+weight: 0

@@ -3,6 +3,9 @@ status: true
 dependencies:
   module:
     - taxonomy
+  enforced:
+    module:
+      - catalog_importer
 id: taxonomy_term.field_kw_contains_all
 field_name: field_kw_contains_all
 entity_type: taxonomy_term

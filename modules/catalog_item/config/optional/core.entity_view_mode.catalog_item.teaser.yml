@@ -1,8 +1,9 @@
 langcode: en
 status: true
 dependencies:
-  module:
-    - catalog_item
+  enforced:
+    module:
+      - catalog_item
 id: catalog_item.teaser
 label: Teaser
 targetEntityType: catalog_item

@@ -1,6 +1,11 @@
 <?php
 use Drupal\user\Entity\User;
 use Drupal\Core\Url;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\node\Entity\Node;
+use Drupal\Core\Cache\Cache;
+use Drupal\node\NodeInterface;
 /**
  * @file
  * Contains fontanalib.module.
@@ -82,9 +87,139 @@ function fontanalib_form_alter(&$form, $form_state, $form_id) {
     $form['user_cancel_reassign_to']['#weight'] = 20;
     $form['user_cancel_confirm']['#weight'] = 30;
     $form['description']['#weight'] = 40;
+  } 
+}
+function fontanalib_form_nodeaccess_admin_settings_alter(&$form, FormStateInterface $form_state, $form_id){
+  $node_types = \Drupal::entityTypeManager()->getStorage('node_type')->loadMultiple();
+  // $roles = \Drupal::entityTypeManager()->getStorage('user_role')->loadMultiple();
+  // Generate fieldsets for each node type.
+  foreach ($node_types as $type => $bundle) {
+    $form[$type]['fontanalib_edit_access_config_permissions'] = [
+      '#type' => 'checkbox',
+      '#title' => t('Allow authors to configure edit permissions'),
+      '#default_value' => \Drupal::config('fontanalib.settings')->get("access_settings.$type.edit_config"),
+      '#description' => t('Allow authors to grant edit permissions to the members of groups to which this content belongs.'),
+    ];
+  }
+    $form['#submit'][] = 'fontanalib_form_nodeaccess_settings';
+
+}
+function fontanalib_form_nodeaccess_settings(array &$form, FormStateInterface $form_state){
+  $config = \Drupal::service('config.factory')->getEditable('fontanalib.settings');
+  $node_types = \Drupal::entityTypeManager()->getStorage('node_type')->loadMultiple();
+  $values = $form_state->getValues();
+  // $access_settings=$config->get('access');
+  foreach ($node_types as $type => $bundle) {
+    $config->set("access_settings.$type.edit_config", $values[$type]['fontanalib_edit_access_config_permissions']);
+  }
+  $config->save();
+}
+function fontanalib_form_nodeaccess_grants_form_alter(&$form, FormStateInterface $form_state, $form_id){
+  $values = $form_state->getValues();
+  // $node = Node::load($values['nid']);
+  /**
+   * GET THE NID
+   */
+  if(!$node){
+    return;
+  }
+  $type = $node->bundle();
+  $perms = \Drupal::config('fontanalib.settings')->get("access_settings.$type.edit_config");
+  
+  if($perms == 1){
+    if(isset($values['fontanalib_allow_related_groups_edit'])){
+      $value = $values['fontanalib_allow_related_groups_edit'];
+    } else {
+      // $results = db_query("SELECT id, type, label, grant_view, grant_update, grant_delete
+      //     FROM {node_access}
+      //     LEFT JOIN {groups_field_data} ON id = gid
+      //     WHERE nid = :nid AND realm = :realm
+      //     ORDER BY type", [
+      //       ':nid' => $nid,
+      //       ':realm' => 'fontanalib_nodeaccess_group',
+      //     ]);
+      $results = db_query("SELECT gid
+          FROM {node_access}
+          WHERE nid = :nid AND realm = :realm", [
+            ':nid' => $nid,
+            ':realm' => 'fontanalib_nodeaccess_group',
+          ]);
+        \Drupal::logger('fontanalib')->error('Query @label updating....', array(
+          '@label'  => print_r($results, TRUE),
+        ));
+      $value = $results && count($results) > 0 ? 1 : 0;
+    }
+    $form['fontanalib_allow_related_groups_edit'] = [
+      '#type' => 'checkbox',
+      '#title' => t('Allow staff in related groups to edit this content'),
+      '#default_value' => $value,
+      '#description' => t('If checked, staff who are members of groups tagged or added in the field "groups" will be able to edit this content.'),
+    ];
+    $form['#submit'] = 'fontanalib_nodeaccess_grants_alter';
   }
 }
+/**
+ * 
+ * 
+ */
+function fontanalib_nodeaccess_grants_alter(array &$form, FormStateInterface $form_state){
+  $values = $form_state->getValues();
+  $nid = $values['nid'];
+  $grants = [];
+  $node = Node::load($nid);
+  
+  $groups = $node->get('field_group');
 
+  if (isset($values['fontanalib_allow_related_groups_edit']) && $values['fontanalib_allow_related_groups_edit'] == 1) {
+    foreach($node->get('field_group') as $group){
+      $grants[] = [
+          'gid' => $group->target_id,
+          'realm' => 'fontanalib_nodeaccess_group',
+          'grant_view' => 0,
+          'grant_update' => 1,
+          'grant_delete' => 0,
+      ];
+    }
+  }
+  foreach (['uid', 'rid'] as $type) {
+    $realm = 'nodeaccess_' . $type;
+    if (isset($values[$type]) && is_array($values[$type])) {
+      foreach ($values[$type] as $gid => $line) {
+        $grant = [
+          'gid' => $gid,
+          'realm' => $realm,
+          'grant_view' => empty($line['grant_view']) ? 0 : $line['grant_view'],
+          'grant_update' => empty($line['grant_update']) ? 0 : $line['grant_update'],
+          'grant_delete' => empty($line['grant_delete']) ? 0 : $line['grant_delete'],
+        ];
+        if ($grant['grant_view'] || $grant['grant_update'] || $grant['grant_delete']) {
+          $grants[] = $grant;
+        }
+      }
+    }
+  }
+  // Save role and user grants to our own table.
+  \Drupal::database()->delete('nodeaccess')
+    ->condition('nid', $nid)
+    ->execute();
+  foreach ($grants as $grant) {
+    $id = db_insert('nodeaccess')
+      ->fields([
+        'nid' => $nid,
+        'gid' => $grant['gid'],
+        'realm' => $grant['realm'],
+        'grant_view' => $grant['grant_view'],
+        'grant_update' => $grant['grant_update'],
+        'grant_delete' => $grant['grant_delete'],
+      ])
+      ->execute();
+  }
+  \Drupal::entityTypeManager()->getAccessControlHandler('node')->writeGrants($node);
+  drupal_set_message(t('Grants saved.'));
+
+  $tags = ['node:' . $node->id()];
+  Cache::invalidateTags($tags);
+}
 /**
  * Implements hook_user_cancel().
  */
@@ -141,7 +276,6 @@ function fontanalib_toolbar() {
     '#attributes' => [
       'class' => 'toolbar-icon toolbar-icon-system-admin-config',
     ],
-
   ];
 
   $items['fontanalib'] = [
@@ -170,3 +304,37 @@ function fontanalib_toolbar() {
 
   return $items;
 }
+/**
+ * Implements hook_node_grants().
+ * 
+ * is called to determine access and is what is used to check the node_access table
+ */
+function fontanalib_node_grants_alter(&$grants, AccountInterface $account, $op) {
+  if($op === 'update' && in_array('staff', $account->getRoles())) {
+    $groups = array();
+    $grp_membership_service = \Drupal::service('group.membership_loader');
+    $grps = $grp_membership_service->loadByUser($account);
+    foreach ($grps as $grp) {
+      $groups[] = $grp->getGroup()->id;
+    }
+    $grants['fontanalib_nodeaccess_group'] = $groups;
+  }
+  return $grants;
+}
+// /**
+//  * Implements hook_node_access_records_alter().
+//  * called when each node is saved
+//  */
+// function fontanalib_node_access_records_alter(&$grants, NodeInterface $node) {
+//   // $results = db_query("SELECT id, type, label, grant_view, grant_update, grant_delete
+//       //     FROM {node_access}
+//       //     LEFT JOIN {groups_field_data} ON id = gid
+//       //     WHERE nid = :nid AND realm = :realm
+//       //     ORDER BY type", [
+//       //       ':nid' => $nid,
+//       //       ':realm' => 'fontanalib_nodeaccess_group',
+//       //     ]);
+  
+//   return $grants;
+  
+// }

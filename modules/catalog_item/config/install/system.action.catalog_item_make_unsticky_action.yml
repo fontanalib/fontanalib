@@ -1,8 +1,9 @@
 langcode: en
 status: true
 dependencies:
-  module:
-    - catalog_item
+  enforced:
+    module:
+      - catalog_item
 id: catalog_item_make_unsticky_action
 label: 'Make catalog item unsticky'
 type: catalog_item

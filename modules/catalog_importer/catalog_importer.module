@@ -67,3 +67,109 @@ function catalog_importer_add_term_fields(VocabularyInterface $type, $field_id, 
 
   return $field;
 }
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * Alters the fontalib admin settings form
+ *
+ */
+function catalog_importer_form_fontanalib_admin_settings_alter(&$form, FormStateInterface $form_state, $form_id) {
+  $config = \Drupal::config('fontanalib.settings');
+  $form['#tree'] = TRUE;
+    $cached_vocabs = $config->get('catalog_importer_cached_vocabs');
+    $options = catalog_importer_getVocabularies();
+    $form['vocab_settings'] = array(
+      '#tree'   => TRUE,
+      '#type'  => 'fieldset',
+      '#title' => $this->t('Catalog Taxonomy settings'),
+    );
+    $form['vocab_settings']['actions']['delete'] = array(
+      '#type' => 'submit',
+      '#value' => t('Rebuild All Term Caches'),
+      '#weight' => 15,
+      '#submit' => array('Drupal\catalog_importer\Utils\ImporterFunctions::catalog_importer_rebuild_all_term_caches'),
+      '#prefix' => '<div style="float:right;">',
+      '#suffix' => '</div>',
+  
+     );
+    $form['vocab_settings']['catalog_vocabularies'] = [
+      '#tree' => TRUE,
+      '#type' => 'checkboxes',
+      '#title' => $this->t('Catalog Vocabularies'),
+      '#default_value' => $cached_vocabs,
+      '#options'  => $options,
+      '#description' => $this->t('Select the vocabularies that should be cached for use with keyword matching in the Catalog Importer.'),
+    ];
+    
+    if(!empty($cached_vocabs)){
+      $settings = $config->get('catalog_importer_vocab_settings');
+      foreach($cached_vocabs as $vocab){
+        $diffed = array_diff($cached_vocabs, [$vocab]);
+        $form['vocab_settings']['config'][$vocab] = array(
+          '#tree'   => TRUE,
+          '#type'  => 'fieldset',
+          '#title' => $this->t($vocab . ' settings'),
+        );
+
+        $form['vocab_settings']['config'][$vocab]['actions']['delete'] = array(
+          '#type' => 'submit',
+          '#value' => t('Rebuild ' . $options[$vocab] .' Cache'),
+          '#submit' => array('Drupal\catalog_importer\Utils\ImporterFunctions::catalog_importer_rebuild_term_cache_submit'),
+          '#prefix' => '<div style="float:right;">',
+          '#suffix' => '</div>',
+         );
+       
+        $form['vocab_settings']['config'][$vocab]['diff'] = [
+          '#tree' => TRUE,
+          '#type' => 'checkboxes',
+          '#title' => $this->t('Vocabularies to filter out'),
+          '#default_value' => !empty($settings) && isset($settings[$vocab]) && isset($settings[$vocab]['diff']) ? $settings[$vocab]['diff'] : [],
+          '#options'  => $this->catalog_importer_getVocabularies($diffed),
+          '#description' => $this->t("Select the vocabularies whose terms should be filtered out when parsing terms during import. (i.e. remove genre terms so they aren't duplicated in the topic taxonomy.)"),
+        ];
+        
+      }
+    }
+  $form['#submit'][] = 'catalog_importer_fontanalib_admin_settings_submit';
+}
+function catalog_importer_getVocabularies($vids = null){
+  $vocabularies = Vocabulary::loadMultiple($vids);
+  $option = array();
+  if($vocabularies){
+    foreach($vocabularies as $vid => $vocab){
+      $option[$vid] = $vocab->get('name');
+    }
+  }
+  return $option;
+}
+function catalog_importer_fontanalib_admin_settings_submit(array &$form, FormStateInterface $form_state) {
+  $values = $form_state->getValues();
+  $config = \Drupal::service('config.factory')->getEditable('fontanalib.settings');
+  $vocabs = array();
+  
+  foreach($values['vocab_settings']['catalog_vocabularies'] as $vocab => $set){
+    if(!empty($set)){
+      $vocabs[] = $vocab;
+      $vocabulary_entity = Vocabulary::load($vocab);
+      foreach($config->get('catalog_importer_keyword_fields') as $field_id => $field_label){
+        catalog_importer_add_term_fields($vocabulary_entity, $field_id, $field_label);
+      }
+    }
+  } 
+  
+  if(isset($values['vocab_settings']['config'])){
+    $settings = $values['vocab_settings']['config'];
+    foreach($settings as $vocab => &$setting){
+      foreach($setting as $name => &$values){
+        if(is_array($values)){
+          $values = array_filter($values);
+        }
+      }
+    }
+    $config->set('catalog_importer_vocab_settings', $settings);
+  }
+
+  $config->set('catalog_importer_cached_vocabs', $vocabs)->save();
+  
+  // $config->save();
+}

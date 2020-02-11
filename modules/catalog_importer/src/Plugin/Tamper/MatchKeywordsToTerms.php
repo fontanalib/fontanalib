@@ -146,7 +146,7 @@ class MatchKeywordsToTerms extends TamperBase {
    */
   protected function getOptions() {
     $vocabularies = Vocabulary::loadMultiple();
-    $config = \Drupal::config('catalog_importer.settings')->get('cached_vocabs');
+    $config = \Drupal::config('fontanalib.settings')->get('catalog_importer_cached_vocabs');
     $option = array();
     foreach($vocabularies as $vid => $vocab){
       if(in_array($vid, $config)){
@@ -160,7 +160,7 @@ class MatchKeywordsToTerms extends TamperBase {
    */
   public function tamper($data, TamperableItemInterface $item = NULL) {
     $vocab = $this->getSetting(self::SETTING_OPERATION);
-    $catalog_vocabularies = \Drupal::config('catalog_importer.settings')->get('cached_vocabs');
+    $catalog_vocabularies = \Drupal::config('fontanalib.settings')->get('catalog_importer_cached_vocabs');
 
     if(!$catalog_vocabularies || !in_array($vocab, $catalog_vocabularies)){
       $msg1 = !empty($catalog_vocbularies) && is_array($catalog_vocabularies) ?

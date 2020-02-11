@@ -1,8 +1,10 @@
 langcode: en
 status: true
 dependencies:
+  enforced:
+    module:
+      - catalog_item
   module:
-    - catalog_item
     - text
 id: catalog_item.description
 field_name: description

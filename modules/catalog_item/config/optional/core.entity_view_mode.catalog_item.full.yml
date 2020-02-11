@@ -1,8 +1,9 @@
 langcode: en
 status: false
 dependencies:
-  module:
-    - catalog_item
+  enforced:
+    module:
+      - catalog_item
 id: catalog_item.full
 label: 'Full content'
 targetEntityType: catalog_item

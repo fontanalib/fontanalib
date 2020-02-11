@@ -48,20 +48,20 @@ class EvergreenResourceProcessor extends EntityProcessorBase {
    * @todo make the configurable via form
    */
   protected $preserve = array(
-    'field_resource_audience'=> 1,
-    'field_resource_genre' => 1,
-    'field_catalog'=> 1,
-    'field_resource_isbn' => 0,
+    'field_catalog_audience'=> 1,
+    'field_catalog_genre' => 1,
+    'field_catalog_id'=> 1,
+    'field_catalog_identifier' => 0,
+    'field_catalog_isbn' => 1,
     'title' => 1,
     'status' => 1,
-    'field_resource_description' => 1,
-    'field_resource_image' => 1,
-    'field_resource_url' => 1,
+    'field_description' => 1,
+    'field_catalog_image' => 1,
+    'field_catalog_url' => 1,
     'catalog_importer_id' => 0,
     'field_featured_collection' => 0,
-    'field_resource_keyword'  => 0,
+    'field_catalog_keyword'  => 0,
     'feeds_item' => 0,
-    'field_resource_id' => 1,
   );
   
   /**
@@ -441,7 +441,8 @@ class EvergreenResourceProcessor extends EntityProcessorBase {
    * {@inheritdoc}
    */
   public function onFeedTypeDelete() {
-    parent::removeCatalogFeedItemField();
+    parent::removeFeedItemField();
+    $this->removeCatalogFeedItemField();
   }
 
   /**
@@ -541,7 +542,7 @@ class EvergreenResourceProcessor extends EntityProcessorBase {
         continue;
       }
       foreach ($mapping['unique'] as $key => $true) {
-        if ($mapping['target'] == 'field_resource_id') {
+        if ($mapping['target'] == 'field_catalog_id') {
           $plugin = $this->feedType->getTargetPlugin($delta);
           $entity_id = $plugin->getUniqueValue($feed, $mapping['target'], $key, $item->get($mapping['map'][$key]));
           if ($entity_id) {

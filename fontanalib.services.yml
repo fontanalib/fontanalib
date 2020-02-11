@@ -1,0 +1,5 @@
+services:
+  fontanalib.route_subscriber:
+    class: Drupal\fontanalib\Routing\RouteSubscriber
+    tags:
+      - { name: event_subscriber }
