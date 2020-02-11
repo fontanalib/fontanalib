@@ -33,17 +33,11 @@ class EvergreenModsParser extends PluginBase implements ParserInterface {
       if (!empty($item)) {
         $yourItem = new ResourceItem();
         // Process out the $item into an easily usable data set.
-        $yourItem->set('catalog', 'evergreen');
-        $yourItem->set('guid', (string) $item->recordInfo->recordIdentifier[0]);
-        $yourItem->set('tcn', (string) $item->recordInfo->recordIdentifier[0]);
-        $yourItem->set('active_date', (string) $item->recordInfo->recordCreationDate);
-
+           
         $titleArray=$this->processResourcesTitles($item);
-        $yourItem->set('title', $titleArray[0]);
-        array_shift($titleArray);
-        $yourItem->set('alt_titles', $titleArray);
-
         $keywords = $this->getItemKeywords($item);
+        $authors = $this->getCreators($item);
+        $identifiers = $this->processIdentifiers($item);
 
         foreach($titleArray as $title){
           $check = preg_match('/\[(.*)\]/U', strtolower($title), $matches);
@@ -55,30 +49,31 @@ class EvergreenModsParser extends PluginBase implements ParserInterface {
           }
         }
 
-        $yourItem->set('audience', $keywords);
-        $yourItem->set('genre', $keywords);
-        $yourItem->set('topics', $keywords);
+        $yourItem
+          ->set('catalog', 'evergreen')
+          ->set('guid', (string) $item->recordInfo->recordIdentifier[0])
+          ->set('tcn', (string) $item->recordInfo->recordIdentifier[0])
+          ->set('active_date', (string) $item->recordInfo->recordCreationDate)
+          ->set('title', $titleArray[0])
+          ->set('audience', $keywords)
+          ->set('genre', $keywords)
+          ->set('topics', $keywords)
+          ->set('type', $this->getItemKeywords($item, 'type'))
+          ->set('form', $this->getItemKeywords($item, 'form'))
+          ->set('classification', $this->getItemKeywords($item, 'ddc'))
+          ->set('creators', $authors['names'])
+          ->set('roles', $authors['roles'])
+          ->set('identifier_types',  array_map('strval', array_values($identifiers['identifiers'])))
+          ->set('identifier_ids', array_map('strval', array_keys($identifiers['identifiers'])))
+          ->set('isbn', $identifiers['isbns'])
+          ->set('description', $this->getResourceDescription($item));
 
-        $yourItem->set('type', $this->getItemKeywords($item, 'type'));
-        $yourItem->set('form', $this->getItemKeywords($item, 'form'));
-        $yourItem->set('classification', $this->getItemKeywords($item, 'ddc'));
 
-        $authors = $this->getCreators($item);
-        $yourItem->set('creators', $authors['names']);
-        $yourItem->set('roles', $authors['roles']);
+        array_shift($titleArray);
+        $yourItem->set('alt_titles', $titleArray);
 
-
-        $identifiers = $this->processIdentifiers($item);
-        $types = array_map('strval', array_values($identifiers['identifiers']));
-        $yourItem->set('identifier_types', $types);
-        $ids = array_map('strval', array_keys($identifiers['identifiers']));
-        $yourItem->set('identifier_ids', $ids);
-        $yourItem->set('isbn', $identifiers['isbns']);
-
-        $description = $this->getResourceDescription($item);
-        $yourItem->set('description', $description);
+        $result->addItem($yourItem);
       }
-      $result->addItem($yourItem);
     }
     return $result;
   }

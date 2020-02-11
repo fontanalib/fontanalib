@@ -35,6 +35,7 @@ class ConfigForm extends ConfigFormBase {
 
     $roles = \Drupal::entityTypeManager()->getStorage('user_role')->loadMultiple();
     $role_options = [];
+
     foreach($roles as $role){
       $role_options[$role->id()] = $role->label();
     }
@@ -61,6 +62,16 @@ class ConfigForm extends ConfigFormBase {
       ];
     }
 
+
+
+    $form['user_settings']['staff_roles'] = [
+      '#type' => 'checkboxes',
+      '#title' => "Select the user roles that indicate staff-level access.",
+      '#default_value' => $config->get('staff_roles') && $config->get('staff_roles') ? $config->get('staff_roles') : [],
+      '#options' => $role_options,
+    ];
+  
+
     return parent::buildForm($form, $form_state);
   }
 
@@ -78,18 +89,13 @@ class ConfigForm extends ConfigFormBase {
     //$roleConfig = [];
     foreach($entities as $entity){
       $roleConfig[$entity] = $form_state->getValue(['user_settings', 'role_content_assign', $entity]);
-      //$roleConfig = $form_state->getValue(['user_settings', 'role_content_assign', $entity]);
-      \Drupal::logger('fontanalib')->notice('config @entity <br/><pre>@type</pre>',
-        array(
-            '@type' => print_r($roleConfig, TRUE),
-            '@entity'=> $entity,
-        ));
     }
 
-    // Set the submitted configuration setting.
     $config
+      ->set('staff_roles', $form_state->getValue(['user_settings', 'staff_roles']))
       ->set('role_content_assign', $roleConfig)
       ->save();
+      
     parent::submitForm($form, $form_state);
   }
 
