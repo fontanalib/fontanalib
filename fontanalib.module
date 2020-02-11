@@ -1,10 +1,88 @@
 <?php
 use Drupal\user\Entity\User;
 use Drupal\Core\Url;
+
+use Drupal\node\NodeInterface;
+use Drupal\taxonomy\Entity\Term;
+use Drupal\tac_lite\Form\SchemeForm;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Database\Query\AlterableInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
 /**
  * @file
  * Contains fontanalib.module.
  */
+/**
+ * Implements hook_node_access_records().
+ * called when each node is saved
+ */
+function fontanalib_node_access_records(NodeInterface $node) {
+  $grants = [];
+  // We only care about the node if it's published.
+  // We don't want to override view published permissions.
+  if ($node->isPublished()) {
+    $grants[] = [
+      'realm' => "view_any_{$node->getType()}_content",
+      'gid' => 1,
+      'grant_view' => 1,
+      'grant_update' => 0,
+      'grant_delete' => 0,
+      'priority' => 0,
+    ];
+    $grants[] = [
+      'realm' => "view_own_{$node->getType()}_content",
+      'gid' => $node->getOwnerId(),
+      'grant_view' => 1,
+      'grant_update' => 0,
+      'grant_delete' => 0,
+      'priority' => 0,
+    ];
+  }
+  //If this node is a type with custom view permissions
+  if($node->getEntityType()->getThirdPartySetting('fontanalib', 'publish_public', $config->get('default_publish_public'))){
+
+    //FIRST-- 
+    // if($node->getEntityType()->getThirdPartySetting('fontanalib', 'publish_public', $config->get('default_publish_public'))){
+
+    // }
+    
+    // $grants[] = [
+    //   'nid' => $node->id(),
+    //   'realm' => "view_county_content",
+    //   'gid' => 1,
+    //   'grant_view' => 1,
+    //   'grant_update' => 0,
+    //   'grant_delete' => 0,
+    //   'priority' => 0,
+    // ];
+  
+  }
+  if($node->getEntityType()->getThirdPartySetting('fontanalib', 'edit_access_enable', $config->get('default_edit_access_enable'))){
+
+  }
+  return $grants;
+  
+}
+/**
+ * Implements hook_node_grants().
+ * 
+ * is called to determine access and is what is used to check the node_access table
+ */
+function fontanalib_node_grants(AccountInterface $account, $op) {
+  $grants = [];
+  if ($op == 'view') {
+    foreach (NodeType::loadMultiple() as $type) {
+      $type_id = $type->id();
+      if ($account->hasPermission("view any $type_id content")) {
+        $grants["view_any_{$type_id}_content"] = [1];
+      }
+      if ($account->hasPermission("view own $type_id content")) {
+        $grants["view_own_{$type_id}_content"] = [$account->id()];
+      }
+    }
+  }
+  return $grants;
+}
 
 /**
  * Implements hook_user_cancel_methods_alter().
@@ -169,4 +247,91 @@ function fontanalib_toolbar() {
   ];
 
   return $items;
+}
+/**
+ * Implements hook_form_FORM_ID_alter() for node_type_form().
+ */
+function fontanalib_form_node_type_form_alter(array &$form, FormStateInterface $form_state) {
+  // Load the real code only when needed.
+  module_load_include('inc', 'fontanalib', 'fontanalib.admin');
+  _fontanalib_form_node_type_form_alter($form, $form_state);
+}
+/**
+ * Implements hook_form_FORM_ID_alter() for node_form().
+ */
+function fontanalib_form_node_form_alter(&$form, FormStateInterface $form_state) {
+  $config = \Drupal::config('fontanalib.settings');
+  /** @var \Drupal\node\NodeTypeInterface $type */
+  $type = $form_state->getFormObject()->getEntity()->type->entity;
+  $type_id = $type->id();
+  $publishing_enabled = $type->getThirdPartySetting('fontanalib', 'publish_public', $config->get('default_publish_public'));
+  $edit_access_enable = $type->getThirdPartySetting('fontanalib', 'edit_access_enable', $config->get('default_edit_access_enable'));
+  
+
+  $node = $form_state->getFormObject()->getEntity();
+  if (!$publishing_enabled  && !$edit_access_enable) {
+    // unset($form['publish_config_on']);
+    // unset($form['edit_config_on']);
+    return;
+  }
+
+  // Create the group for the fields.
+  $form['fontanalib_access_settings'] = [
+    '#type' => 'details',
+    '#title' => t('Access Control Options'),
+    '#weight' => 35,
+    '#attributes' => ['class' => ['fontanalib-form']],
+    '#optional' => TRUE,
+    '#group'  => 'advanced',
+    '#attached' => ['library' => 'fontanalib/vertical-tabs'],
+    '#access' => FALSE,
+  ];
+  
+    $form['publish_config'] = [
+      '#type' => 'fieldset',
+      '#group' => 'fontanalib_access_settings',
+      '#access' => FALSE,
+    ];
+
+    $form['edit_config'] = [
+      '#type' => 'fieldset',
+      '#group' => 'fontanalib_access_settings',
+      '#access' => FALSE,
+    ];
+
+    if($publishing_enabled){
+      
+      $roles = \Drupal::entityTypeManager()->getStorage('user_role')->loadMultiple();
+      $options = [];
+      
+      foreach($roles as $role){
+        if(!$role->hasPermission('view staff only content') && !in_array($role->id(), $config->get('staff_roles')) && !$role->hasPermission('administer content')  ){
+          $options[$role->id()]=$role->label();
+        }
+      }
+      $default_view_access = 
+      
+      $form['publish_config']['view_access'] = [
+        '#type' => 'checkboxes',
+        '#title' => t('Default view access for this type.'),
+        '#options' => $options,
+        '#default_value' => $type->getThirdPartySetting('fontanalib', 'view_access', $config->get('default_view_access')),
+      ];
+    }
+    if($edit_access_enable){
+      $form['edit_config']['#access'] = TRUE;
+    }
+  
+  if ($publishing_enabled && !\Drupal::currentUser()->hasPermission("administer $type_id public publishing")) {
+    // Do not show the scheduler fields for users who do not have permission.
+    // Setting #access to FALSE for 'scheduler_settings' is enough to hide the
+    // fields. Setting FALSE for the individual fields is necessary to keep any
+    // existing scheduled dates preserved and remain unchanged on saving.
+    $form['fontanalib_access_settings']['#access'] = TRUE;
+    $form['publish_config']['#access'] = TRUE;
+  }
+  if (!\Drupal::currentUser()->hasPermission("configure $type_id edit permissions")) {
+    $form['fontanalib_access_settings']['#access'] = TRUE;
+    $form['edit_config']['#access'] = TRUE;
+  }
 }

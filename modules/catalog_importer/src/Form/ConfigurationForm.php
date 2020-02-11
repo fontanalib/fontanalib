@@ -131,9 +131,7 @@ public function getVocabularies($vids = null){
       $config->set('vocab_settings', $settings);
     }
  
-    $config->set('cached_vocabs', $vocabs);
-    
-    $config->save();
+    $config->set('cached_vocabs', $vocabs)->save();
     return parent::submitForm($form, $form_state);
   }
  
