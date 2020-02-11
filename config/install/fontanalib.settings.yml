@@ -1,5 +1,0 @@
-default_expand_fieldset: 'when_required'
-default_fields_display_mode: 'vertical_tab'
-default_publish_public: false
-default_edit_access_enable: false
-default_view_access: 'und'

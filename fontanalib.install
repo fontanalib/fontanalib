@@ -1,26 +1,6 @@
 <?php
-// use Drupal\node\Entity\NodeType;
+
 function fontanalib_install(){
   $config = \Drupal::service('config.factory')->getEditable('fontanalib.settings');
-  
-  $config
-  ->set('entities', array('node'))
-  ->save();
-  if (function_exists('node_access_needs_rebuild')) {
-    node_access_needs_rebuild(TRUE);
-  }
+  $config->set('entities', array('node'))->save();
 }
-
-/**
- * Implements hook_uninstall().
- */
-function fontanalib_uninstall() {
-  node_access_needs_rebuild(TRUE);
-}
-
-/**
- * Implements hook_update_N().
- */
-function fontanalib_update_N() {
-  node_access_needs_rebuild(TRUE);
- }
