@@ -3,8 +3,8 @@ status: true
 dependencies:
   module:
     - catalog_item
-id: catalog_item.field_resource_alternative_title
-field_name: field_resource_alternative_title
+id: catalog_item.field_catalog_alternative_title
+field_name: field_catalog_alternative_title
 entity_type: catalog_item
 type: string
 settings:

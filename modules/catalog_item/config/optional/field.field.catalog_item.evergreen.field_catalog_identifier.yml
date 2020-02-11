@@ -1,0 +1,34 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.catalog_item.field_catalog_identifier
+    - catalog_item.catalog.evergreen
+    - paragraphs.paragraphs_type.record_identifier
+  module:
+    - entity_reference_revisions
+    - catalog_item
+id: catalog_item.evergreen.field_catalog_identifier
+field_name: field_catalog_identifier
+entity_type: catalog_item
+bundle: evergreen
+label: Identifiers
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:paragraph'
+  handler_settings:
+    negate: 0
+    target_bundles:
+      record_identifier: record_identifier
+    target_bundles_drag_drop:
+      record_identifier:
+        enabled: true
+        weight: 3
+      creator:
+        weight: 4
+        enabled: false
+field_type: entity_reference_revisions

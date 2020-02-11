@@ -1,0 +1,31 @@
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.paragraph.creator.field_creator_name
+    - field.field.paragraph.creator.field_creator_role
+    - paragraphs.paragraphs_type.creator
+id: paragraph.creator.default
+targetEntityType: paragraph
+bundle: creator
+mode: default
+content:
+  field_creator_name:
+    type: string_textfield
+    weight: 0
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  field_creator_role:
+    type: string_textfield
+    weight: 1
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+hidden:
+  created: true
+  status: true
