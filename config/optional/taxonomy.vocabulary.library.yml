@@ -3,10 +3,7 @@ status: true
 dependencies:
   module:
     - taxonomy
-  enforced:
-    module:
-      - catalog_item
 name: Library
 vid: library
-description: 'Use genre to group content by common and high-interest genre terms.'
+description: 'Use Library to group content by branch.'
 weight: 0

@@ -6,6 +6,8 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\node\Entity\Node;
 use Drupal\Core\Cache\Cache;
 use Drupal\node\NodeInterface;
+use Drupal\Core\Field\BaseFieldDefinition;
+use Drupal\Core\Entity\EntityTypeInterface;
 /**
  * @file
  * Contains fontanalib.module.
@@ -115,48 +117,52 @@ function fontanalib_form_nodeaccess_settings(array &$form, FormStateInterface $f
   $config->save();
 }
 function fontanalib_form_nodeaccess_grants_form_alter(&$form, FormStateInterface $form_state, $form_id){
-  $values = $form_state->getValues();
-  // $node = Node::load($values['nid']);
-  /**
-   * GET THE NID
-   */
-  if(!$node){
-    return;
-  }
+  // $values = $form_state->getValues();
+  // dd($form);
+  $nid=$form['nid']["#value"];
+  $node = Node::load($nid);
   $type = $node->bundle();
   $perms = \Drupal::config('fontanalib.settings')->get("access_settings.$type.edit_config");
   
-  if($perms == 1){
-    if(isset($values['fontanalib_allow_related_groups_edit'])){
-      $value = $values['fontanalib_allow_related_groups_edit'];
-    } else {
-      // $results = db_query("SELECT id, type, label, grant_view, grant_update, grant_delete
-      //     FROM {node_access}
-      //     LEFT JOIN {groups_field_data} ON id = gid
-      //     WHERE nid = :nid AND realm = :realm
-      //     ORDER BY type", [
-      //       ':nid' => $nid,
-      //       ':realm' => 'fontanalib_nodeaccess_group',
-      //     ]);
-      $results = db_query("SELECT gid
-          FROM {node_access}
-          WHERE nid = :nid AND realm = :realm", [
-            ':nid' => $nid,
-            ':realm' => 'fontanalib_nodeaccess_group',
-          ]);
-        \Drupal::logger('fontanalib')->error('Query @label updating....', array(
-          '@label'  => print_r($results, TRUE),
-        ));
-      $value = $results && count($results) > 0 ? 1 : 0;
+  $allowance = $node->fontanalib_nodeaccess_group->value;//$node->get('fontanalib_nodeaccess_group')->getValue();
+
+  $allowance = $allowance == 1 ? 1 : 0;
+
+
+  $form['fontanalib_allow_related_groups_edit'] = [
+    '#type' => 'checkbox',
+    '#title' => t('Allow staff in related groups to edit this content'),
+    '#default_value' => $allowance,
+    '#description' => t('If checked, staff who are members of groups tagged or added in the field "groups" will be able to edit this content.'),
+    '#access' => FALSE,
+  ];
+  $groups = $node->hasField('field_group') ? $node->get('field_group')->getValue() : [];
+  
+  $allowed_groups = array();
+
+  if(!empty($groups)){
+    foreach($groups as $group){
+      $allowed_groups[] = (int) $group['target_id'];
     }
-    $form['fontanalib_allow_related_groups_edit'] = [
-      '#type' => 'checkbox',
-      '#title' => t('Allow staff in related groups to edit this content'),
-      '#default_value' => $value,
-      '#description' => t('If checked, staff who are members of groups tagged or added in the field "groups" will be able to edit this content.'),
-    ];
-    $form['#submit'] = 'fontanalib_nodeaccess_grants_alter';
   }
+
+  $form['allowed_groups'] = [
+    '#type' => 'hidden',
+    '#value' => $allowed_groups,
+  ];
+
+  $form['orig_fontanalib_nodeaccess_group'] = [
+    '#type' => 'hidden',
+    '#value' => $allowance,
+  ];
+
+  if($perms && !empty($perms)){
+    $form['fontanalib_allow_related_groups_edit']['#access'] = TRUE;
+  }
+  
+  $form['#submit'] = ['fontanalib_nodeaccess_grants_alter'];
+  $form['actions']['submit']['#submit'] = ['fontanalib_nodeaccess_grants_alter'];
+  
 }
 /**
  * 
@@ -165,15 +171,15 @@ function fontanalib_form_nodeaccess_grants_form_alter(&$form, FormStateInterface
 function fontanalib_nodeaccess_grants_alter(array &$form, FormStateInterface $form_state){
   $values = $form_state->getValues();
   $nid = $values['nid'];
+  $allowance = $values['fontanalib_allow_related_groups_edit'];
+  $change = $values['orig_fontanalib_nodeaccess_group'] == $allowance ? FALSE : TRUE;
   $grants = [];
-  $node = Node::load($nid);
-  
-  $groups = $node->get('field_group');
 
-  if (isset($values['fontanalib_allow_related_groups_edit']) && $values['fontanalib_allow_related_groups_edit'] == 1) {
-    foreach($node->get('field_group') as $group){
+  $groups = $values['allowed_groups'];
+  if (!empty($groups) && $allowance === 1) {
+    foreach($groups as $group){
       $grants[] = [
-          'gid' => $group->target_id,
+          'gid' => $group,
           'realm' => 'fontanalib_nodeaccess_group',
           'grant_view' => 0,
           'grant_update' => 1,
@@ -181,6 +187,7 @@ function fontanalib_nodeaccess_grants_alter(array &$form, FormStateInterface $fo
       ];
     }
   }
+
   foreach (['uid', 'rid'] as $type) {
     $realm = 'nodeaccess_' . $type;
     if (isset($values[$type]) && is_array($values[$type])) {
@@ -198,26 +205,31 @@ function fontanalib_nodeaccess_grants_alter(array &$form, FormStateInterface $fo
       }
     }
   }
+
   // Save role and user grants to our own table.
   \Drupal::database()->delete('nodeaccess')
     ->condition('nid', $nid)
     ->execute();
+
   foreach ($grants as $grant) {
-    $id = db_insert('nodeaccess')
-      ->fields([
-        'nid' => $nid,
-        'gid' => $grant['gid'],
-        'realm' => $grant['realm'],
-        'grant_view' => $grant['grant_view'],
-        'grant_update' => $grant['grant_update'],
-        'grant_delete' => $grant['grant_delete'],
-      ])
-      ->execute();
+    $query = \Drupal::database()->insert('nodeaccess');
+    $id = $query->fields([
+      'nid' => $nid,
+      'gid' => $grant['gid'],
+      'realm' => $grant['realm'],
+      'grant_view' => $grant['grant_view'],
+      'grant_update' => $grant['grant_update'],
+      'grant_delete' => $grant['grant_delete'],
+      ])->execute();
+  }
+
+  $node = Node::load($nid); 
+  if($change){
+    $node->set('fontanalib_nodeaccess_group', $allowance)->save();
   }
   \Drupal::entityTypeManager()->getAccessControlHandler('node')->writeGrants($node);
-  drupal_set_message(t('Grants saved.'));
-
-  $tags = ['node:' . $node->id()];
+  drupal_set_message(t('Grants Saved.'));
+  $tags = ['node:' . $nid];
   Cache::invalidateTags($tags);
 }
 /**
@@ -311,30 +323,51 @@ function fontanalib_toolbar() {
  */
 function fontanalib_node_grants_alter(&$grants, AccountInterface $account, $op) {
   if($op === 'update' && in_array('staff', $account->getRoles())) {
+    $user = \Drupal\user\Entity\User::load($account->id());
     $groups = array();
-    $grp_membership_service = \Drupal::service('group.membership_loader');
-    $grps = $grp_membership_service->loadByUser($account);
-    foreach ($grps as $grp) {
-      $groups[] = $grp->getGroup()->id;
+    foreach ($user->getFields() as $key => $field) {
+      if ($field->getFieldDefinition()->getType() == 'entity_reference') {
+        $targetType = $field->getFieldDefinition()
+          ->getItemDefinition()
+          ->getSetting('target_type');
+        if ($targetType == 'taxonomy_term') {
+          $new_terms = array_map(function (\Drupal\taxonomy\TermInterface $term) {
+            // Need to check if Vocabulary is a "GROUP" type....
+            return $term->id();
+          }, $field->referencedEntities());
+          $groups = array_merge($groups, $new_terms);
+        }
+      }
     }
     $grants['fontanalib_nodeaccess_group'] = $groups;
   }
   return $grants;
 }
-// /**
-//  * Implements hook_node_access_records_alter().
-//  * called when each node is saved
-//  */
-// function fontanalib_node_access_records_alter(&$grants, NodeInterface $node) {
-//   // $results = db_query("SELECT id, type, label, grant_view, grant_update, grant_delete
-//       //     FROM {node_access}
-//       //     LEFT JOIN {groups_field_data} ON id = gid
-//       //     WHERE nid = :nid AND realm = :realm
-//       //     ORDER BY type", [
-//       //       ':nid' => $nid,
-//       //       ':realm' => 'fontanalib_nodeaccess_group',
-//       //     ]);
-  
-//   return $grants;
-  
-// }
+
+/**
+ * Implements hook_entity_base_field_info().
+ */
+function fontanalib_entity_base_field_info(EntityTypeInterface $entity_type) {
+  $fields = [];
+
+  if ($entity_type->id() === 'node') {
+    $fields['fontanalib_nodeaccess_group'] = BaseFieldDefinition::create('boolean')
+      ->setLabel(t('Group NodeAccess Setting'))
+      ->setDisplayOptions('view', [
+        'label' => 'hidden',
+        'region' => 'hidden',
+        'weight' => -5,
+      ])
+      ->setDisplayOptions('form', [
+        'label' => 'hidden',
+        'region' => 'hidden',
+        'weight' => -5,
+      ])
+      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('view', FALSE)
+      ->setTranslatable(TRUE)
+      ->setRevisionable(TRUE);
+  }
+
+  return $fields;
+}
