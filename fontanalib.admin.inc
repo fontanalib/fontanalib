@@ -1,5 +1,6 @@
 <?php
-
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\taxonomy\VocabularyInterface;
 /**
  * @file
  * Content administration and module settings user interface.
@@ -174,4 +175,48 @@ function _entity_mass_update_batch_finished($success, $results, $operations) {
     $message .= \Drupal::service('renderer')->render($item_list);
     \Drupal::messenger()->addStatus($message);
   }
+}
+/**
+ * Helper function for the real hook_form_taxonomy_vocabulary_form_alter().
+ *
+ * @see fontanalib_form_taxonomy_vocabulary_form_alter()
+ */
+function _fontanalib_form_taxonomy_vocabulary_form_alter(array &$form, FormStateInterface $form_state) {
+  $config = \Drupal::config('fontanalib.settings');
+  /** @var \Drupal\taxonomy\VocabularyInterface $type */
+  $vocabulary = $form_state->getFormObject()->getEntity();
+  $form['fontanalib'] = [
+    '#type' => 'details',
+    '#title' => t('Access Control'),
+    '#weight' => 35,
+    '#group' => 'additional_settings',
+    '#open' => TRUE,
+  ];
+  $form['fontanalib']['group'] = [
+    '#type' => 'details',
+    '#title' => t('Groups'),
+    '#weight' => 1,
+    '#group' => 'fontanalib',
+    '#open' => TRUE,
+  ];
+
+  $settings= $vocabulary->getThirdPartySettings('fontanalib');
+
+  $form['fontanalib']['group']['fontanalib_designate_as_group'] = [
+    '#type' => 'checkbox',
+    '#title' => t('Designate this vocabulary as a "group" type with which staff can tag content and extend editing permissions.'),
+    '#default_value' => isset($settings['designate_as_group']) ? $settings['designate_as_group'] : 0,
+  ];
+  
+  $form['fontanalib']['fontanalib_staff_use_only'] = [
+    '#type' => 'checkbox',
+    '#title' => t('Designate this vocabulary as for internal "staff" use only.'),
+    '#default_value' => isset($settings['staff_use_only']) ? $settings['staff_use_only'] : 0,
+    '#weight' => 5,
+  ];
+  $form['#entity_builders'][] = 'fontanalib_form_taxonomy_vocabulary_form_builder';
+}
+function fontanalib_form_taxonomy_vocabulary_form_builder($entity_type, VocabularyInterface $vocabulary, &$form, FormStateInterface $form_state){
+  $vocabulary->setThirdPartySetting('fontanalib', 'designate_as_group', $form_state->getValue('fontanalib_designate_as_group'));
+  $vocabulary->setThirdPartySetting('fontanalib', 'staff_use_only', $form_state->getValue('fontanalib_staff_use_only'));
 }

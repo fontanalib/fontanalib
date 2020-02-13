@@ -401,3 +401,11 @@ function fontanalib_entity_base_field_info(EntityTypeInterface $entity_type) {
 
   return $fields;
 }
+/**
+ * Implements hook_form_FORM_ID_alter() for node_type_form().
+ */
+function fontanalib_form_taxonomy_vocabulary_form_alter(array &$form, FormStateInterface $form_state) {
+  // Load the real code only when needed.
+  module_load_include('inc', 'fontanalib', 'fontanalib.admin');
+  _fontanalib_form_taxonomy_vocabulary_form_alter($form, $form_state);
+}
