@@ -27,7 +27,7 @@ function fontanalib_user_cancel_methods_alter(&$methods) {
 }
 
 /**
- * Implements hook_form_alter().
+ * Implements hook_form_alter() to modify the user account cancel forms.
  */
 function fontanalib_form_alter(&$form, $form_state, $form_id) {
   $forms = ["user_multiple_cancel_confirm", "user_cancel_form"];
@@ -91,6 +91,14 @@ function fontanalib_form_alter(&$form, $form_state, $form_id) {
     $form['description']['#weight'] = 40;
   } 
 }
+/**
+ * Implements hook_form_FORM_ID_alter() for nodeaccess_admin_settings
+ * 
+ * Customizes the Node access configuration/settings to include settings
+ * that will allow granting node authors the ability to grant node edit 
+ * permissions to staff who are in particular groups which are related 
+ * to the node.
+ */
 function fontanalib_form_nodeaccess_admin_settings_alter(&$form, FormStateInterface $form_state, $form_id){
   $node_types = \Drupal::entityTypeManager()->getStorage('node_type')->loadMultiple();
   // $roles = \Drupal::entityTypeManager()->getStorage('user_role')->loadMultiple();
@@ -106,6 +114,12 @@ function fontanalib_form_nodeaccess_admin_settings_alter(&$form, FormStateInterf
     $form['#submit'][] = 'fontanalib_form_nodeaccess_settings';
 
 }
+
+/**
+ * Custom submit handler for nodeaccess_admin_settings
+ * 
+ * Saves the node access group permissions to fontanalib.settings
+ */
 function fontanalib_form_nodeaccess_settings(array &$form, FormStateInterface $form_state){
   $config = \Drupal::service('config.factory')->getEditable('fontanalib.settings');
   $node_types = \Drupal::entityTypeManager()->getStorage('node_type')->loadMultiple();
@@ -116,9 +130,15 @@ function fontanalib_form_nodeaccess_settings(array &$form, FormStateInterface $f
   }
   $config->save();
 }
+
+/**
+ * Implements hook_form_FORM_ID_alter() for nodeaccess_grants_form
+ * 
+ * Adds setting for individual node grants that staff, if permitted 
+ * via nodeaccess_admin_settings, can allow related groups to also 
+ * edit this content.
+ */
 function fontanalib_form_nodeaccess_grants_form_alter(&$form, FormStateInterface $form_state, $form_id){
-  // $values = $form_state->getValues();
-  // dd($form);
   $nid=$form['nid']["#value"];
   $node = Node::load($nid);
   $type = $node->bundle();
@@ -162,11 +182,14 @@ function fontanalib_form_nodeaccess_grants_form_alter(&$form, FormStateInterface
   
   $form['#submit'] = ['fontanalib_nodeaccess_grants_alter'];
   $form['actions']['submit']['#submit'] = ['fontanalib_nodeaccess_grants_alter'];
-  
 }
 /**
+ * Custom submit handler for nodeaccess_grants_form
  * 
- * 
+ * Overrides submission handler for nodeaccess_grants_form, which re-calculates 
+ * node_access grants on "Grants" edit. This function includes the original submission
+ * functions as well, since the nodeacess module will delete the table and re-write
+ * node_access tables.
  */
 function fontanalib_nodeaccess_grants_alter(array &$form, FormStateInterface $form_state){
   $values = $form_state->getValues();
@@ -234,6 +257,9 @@ function fontanalib_nodeaccess_grants_alter(array &$form, FormStateInterface $fo
 }
 /**
  * Implements hook_user_cancel().
+ * 
+ * Re-assigns nodes to designated users, on submission of and if configured 
+ * via user_multiple_cancel_confirm or user_cancel_form
  */
 function fontanalib_user_cancel($edit, $account, $method) {
   switch ($method) {
@@ -320,6 +346,7 @@ function fontanalib_toolbar() {
  * Implements hook_node_grants().
  * 
  * is called to determine access and is what is used to check the node_access table
+ * Adds grants to staff users accounts to allow access via custom nodeaccess for groups
  */
 function fontanalib_node_grants_alter(&$grants, AccountInterface $account, $op) {
   if($op === 'update' && in_array('staff', $account->getRoles())) {
@@ -346,6 +373,9 @@ function fontanalib_node_grants_alter(&$grants, AccountInterface $account, $op) 
 
 /**
  * Implements hook_entity_base_field_info().
+ * 
+ * Adds hidden field to node to store the nodeaccess_grants_form for the
+ * fontanalib_allow_related_groups_edit settings.
  */
 function fontanalib_entity_base_field_info(EntityTypeInterface $entity_type) {
   $fields = [];
@@ -364,9 +394,9 @@ function fontanalib_entity_base_field_info(EntityTypeInterface $entity_type) {
         'weight' => -5,
       ])
       ->setDisplayConfigurable('form', TRUE)
-      ->setDisplayConfigurable('view', FALSE)
-      ->setTranslatable(TRUE)
-      ->setRevisionable(TRUE);
+      ->setDisplayConfigurable('view', FALSE);
+      // ->setTranslatable(TRUE)
+      // ->setRevisionable(TRUE);
   }
 
   return $fields;
