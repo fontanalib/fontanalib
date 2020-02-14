@@ -1,7 +1,7 @@
 <?php
 
 /**
- * File for holding helper functions user by Gary
+ * File for holding helper functions for groups / nodeacceess
  */
 
 
