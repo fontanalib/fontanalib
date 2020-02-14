@@ -8,6 +8,8 @@ use Drupal\Core\Cache\Cache;
 use Drupal\node\NodeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\fontanalib\GroupCheck;
+use Drupal\Core\Entity\EntityInterface;
 /**
  * @file
  * Contains fontanalib.module.
@@ -156,19 +158,13 @@ function fontanalib_form_nodeaccess_grants_form_alter(&$form, FormStateInterface
     '#description' => t('If checked, staff who are members of groups tagged or added in the field "groups" will be able to edit this content.'),
     '#access' => FALSE,
   ];
-  $groups = $node->hasField('field_group') ? $node->get('field_group')->getValue() : [];
-  
-  $allowed_groups = array();
 
-  if(!empty($groups)){
-    foreach($groups as $group){
-      $allowed_groups[] = (int) $group['target_id'];
-    }
-  }
+  $groups = (new GroupCheck($node))->getGroups();
+   
 
   $form['allowed_groups'] = [
     '#type' => 'hidden',
-    '#value' => $allowed_groups,
+    '#value' => $groups,
   ];
 
   $form['orig_fontanalib_nodeaccess_group'] = [
@@ -351,21 +347,7 @@ function fontanalib_toolbar() {
 function fontanalib_node_grants_alter(&$grants, AccountInterface $account, $op) {
   if($op === 'update' && in_array('staff', $account->getRoles())) {
     $user = \Drupal\user\Entity\User::load($account->id());
-    $groups = array();
-    foreach ($user->getFields() as $key => $field) {
-      if ($field->getFieldDefinition()->getType() == 'entity_reference') {
-        $targetType = $field->getFieldDefinition()
-          ->getItemDefinition()
-          ->getSetting('target_type');
-        if ($targetType == 'taxonomy_term') {
-          $new_terms = array_map(function (\Drupal\taxonomy\TermInterface $term) {
-            // Need to check if Vocabulary is a "GROUP" type....
-            return $term->id();
-          }, $field->referencedEntities());
-          $groups = array_merge($groups, $new_terms);
-        }
-      }
-    }
+    $groups = (new GroupCheck($user))->getGroups();
     $grants['fontanalib_nodeaccess_group'] = $groups;
   }
   return $grants;
@@ -408,4 +390,17 @@ function fontanalib_form_taxonomy_vocabulary_form_alter(array &$form, FormStateI
   // Load the real code only when needed.
   module_load_include('inc', 'fontanalib', 'fontanalib.admin');
   _fontanalib_form_taxonomy_vocabulary_form_alter($form, $form_state);
+}
+
+function fontanalib_entity_presave(EntityInterface $entity){
+  
+  if(in_array($entity->getEntityTypeId(), ['node', 'user'])){
+
+    $check =(new GroupCheck($entity))->entityHasChanged();
+    $check = $check ? 'TRUE' : 'FALSE';
+    drupal_set_message(t($check));
+ // Do some stuff to alter node_access grants when node is updated (i.e. if groups have changed)
+ // Shouln't have to do anything on user profile change?
+  }
+
 }
