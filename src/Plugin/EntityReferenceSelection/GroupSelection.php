@@ -19,91 +19,66 @@ use Drupal\taxonomy\Plugin\EntityReferenceSelection\TermSelection;
  * )
  */
 class GroupSelection extends TermSelection {
+  /**
+   * {@inheritdoc}
+   */
+  public function defaultConfiguration() {
+    $options = array();
+    $vocabularies = Vocabulary::loadMultiple();
+
+    foreach ($vocabularies as $vid => $vocabulary) {
+      if($vocabulary->getThirdPartySetting('fontanalib', 'designate_as_group')){
+        $options[$vid] = $vocabulary->label();
+      }
+    }
+
+    return [
+      'bundle_options' => $options,
+    ] + parent::defaultConfiguration();
+  }
 
   /**
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
+    $configuration = $this->setTargetBundles();
     $form = parent::buildConfigurationForm($form, $form_state);
-    $form['target_bundles']['#access'] = FALSE;
-    $form['auto_create']['#access'] = FALSE;
+    $form['target_bundles'] = [
+      '#type' => 'checkboxes',
+      '#title' => "Groups Categories",
+      '#options' => $configuration['bundle_options'],
+      '#default_value' => (array) $configuration['target_bundles'],
+      '#size' => 6,
+      '#multiple' => TRUE,
+      '#element_validate' => [[get_class($this), 'elementValidateFilter']],
+      '#ajax' => TRUE,
+      '#limit_validation_errors' => [],
+    ];
+    
+    unset($form['auto_create']);
+    unset($form['auto_create_bundle']);
+
     return $form;
   }
-   /**
-   * {@inheritdoc}
-   */
-  public function getReferenceableEntities($match = NULL, $match_operator = 'CONTAINS', $limit = 0) {
-    if ($match || $limit) {
-      return parent::getReferenceableEntities($match, $match_operator, $limit);
-    }
-
-    $options = [];
-
-    $bundles = $this->entityTypeBundleInfo->getBundleInfo('taxonomy_term');
-    $bundle_names = array_keys($bundles);
-
-    $has_admin_access = $this->currentUser->hasPermission('administer taxonomy');
-    $unpublished_terms = [];
-    foreach ($bundle_names as $bundle) {
-      if ($vocabulary = Vocabulary::load($bundle)) {
-        if($vocabulary->getThirdPartySetting('fontanalib', 'designate_as_group')){
-          /** @var \Drupal\taxonomy\TermInterface[] $terms */
-          if ($terms = $this->entityTypeManager->getStorage('taxonomy_term')->loadTree($vocabulary->id(), 0, NULL, TRUE)) {
-            foreach ($terms as $term) {
-              if (!$has_admin_access && (!$term->isPublished() || in_array($term->parent->target_id, $unpublished_terms))) {
-                $unpublished_terms[] = $term->id();
-                continue;
-              }
-              $options[$vocabulary->id()][$term->id()] = str_repeat('-', $term->depth) . Html::escape($this->entityRepository->getTranslationFromContext($term)->label());
-            }
-          }
-        }
-      }
-    }
-
-    return $options;
+  public function setTargetBundles(){
+    $configuration = $this->getConfiguration();
+    $check_targets = $configuration['target_bundles'] ? array_intersect_key($configuration['target_bundles'], $configuration['bundle_options']) : array_combine(array_keys($configuration['bundle_options']), array_keys($configuration['bundle_options']));
+    $check_targets = array_filter($check_targets);
+    $configuration['target_bundles'] = empty($check_targets) ? array_combine(array_keys($configuration['bundle_options']), array_keys($configuration['bundle_options'])) : $check_targets;
+    $configuration['auto_create'] = FALSE;
+    $configuration['auto_create_bundle'] = NULL;
+    $configuration['sort'] =  [
+      'field' => 'name',
+      'direction' => 'asc',
+    ];
+    
+    return $configuration;
   }
   /**
    * {@inheritdoc}
    */
-  protected function buildEntityQuery($match = NULL, $match_operator = 'CONTAINS') {
-    $configuration = $this->getConfiguration();
-    // $target_type = $configuration['target_type'];
-    $entity_type = $this->entityTypeManager->getDefinition('taxonomy_term');
-
-    $query = $this->entityTypeManager->getStorage('taxonomy_term')->getQuery();
-    $targetBundles = array();
-    $vocabularies = Vocabulary::loadMultiple();
-
-    foreach ($vocabularies as $vid => $vocabulary) {
-      if($vocabulary->getThirdPartySetting('fontanalib', 'designate_as_group')){
-        $targetBundles[] = $vid;
-      }
-    }
-    if (empty($targetBundles)) {
-      $query->condition($entity_type->getKey('id'), NULL, '=');
-      return $query;
-    }
-    
-    $query->condition($entity_type->getKey('bundle'), $targetBundles, 'IN');
-    
-
-    if (isset($match) && $label_key = $entity_type->getKey('label')) {
-      $query->condition($label_key, $match, $match_operator);
-    }
-
-    // Add entity-access tag.
-    $query->addTag('taxonomy_term' . '_access');
-
-    // Add the Selection handler for system_query_entity_reference_alter().
-    $query->addTag('entity_reference');
-    $query->addMetaData('entity_reference_selection_handler', $this);
-
-    // Add the sort option.
-    if ($configuration['sort']['field'] !== '_none') {
-      $query->sort($configuration['sort']['field'], $configuration['sort']['direction']);
-    }
-
-    return $query;
+  public static function elementValidateFilter(&$element, FormStateInterface $form_state) {
+    $element['#value'] = empty(array_filter($element['#value'])) ? array_combine(array_keys($element['#options']), array_keys($element['#options'])) : $element['#value'];
+    $form_state->setValueForElement($element, $element['#value']);
   }
 }
