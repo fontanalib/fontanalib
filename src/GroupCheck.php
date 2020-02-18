@@ -51,7 +51,6 @@ class GroupCheck {
   public function setGroups() {
     $groups = array();
     foreach ($this->entity->getFields() as $key => $field) {
-      
       if ($field->getFieldDefinition()->getType() !== 'entity_reference'){
         continue;
       }
@@ -59,10 +58,11 @@ class GroupCheck {
         continue;
       }
       
-      $groups += array_map(function (\Drupal\taxonomy\Entity\Term $term) {
-        // Need to check if Vocabulary is a "GROUP" type....
-        return $term->id();
-      }, $field->referencedEntities());
+      foreach($field->referencedEntities() as $group){
+        if(!in_array($group->id(), $groups)){
+          $groups[]=$group->id();
+        }
+      }
     }  
     $this->groups=$groups;    
   }

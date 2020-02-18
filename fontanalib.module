@@ -393,14 +393,36 @@ function fontanalib_form_taxonomy_vocabulary_form_alter(array &$form, FormStateI
 }
 
 function fontanalib_entity_presave(EntityInterface $entity){
-  
-  if(in_array($entity->getEntityTypeId(), ['node', 'user'])){
+  if($entity->getEntityTypeId() == 'node'){
+    $check = new GroupCheck($entity);
+    $changed = $check->entityHasChanged();
+    
+    if($changed && isset($entity->fontanalib_nodeaccess_group) && $entity->fontanalib_nodeaccess_group->value == 1){
+      $nid = $entity->id();
+      $groups = $check->getGroups();
+      // Save role and user grants to our own table.
+      \Drupal::database()->delete('nodeaccess')
+      ->condition('nid', $nid)
+      ->condition('realm', 'fontanalib_nodeaccess_group')
+      ->execute();
 
-    $check =(new GroupCheck($entity))->entityHasChanged();
-    $check = $check ? 'TRUE' : 'FALSE';
-    drupal_set_message(t($check));
- // Do some stuff to alter node_access grants when node is updated (i.e. if groups have changed)
- // Shouln't have to do anything on user profile change?
+      if (!empty($groups) ) {
+        foreach($groups as $group){
+          $query = \Drupal::database()->insert('nodeaccess');
+          $id = $query->fields([
+            'nid' => $nid,
+            'gid' => $group,
+            'realm' => 'fontanalib_nodeaccess_group',
+            'grant_view' => 0,
+            'grant_update' => 1,
+            'grant_delete' => 0
+            ])->execute();
+        }
+      }
+      $grant_storage = \Drupal::service('node.grant_storage');
+      $grants = \Drupal::entityTypeManager()->getAccessControlHandler('node')->acquireGrants($entity);
+      $grant_storage->write($entity, $grants, 'fontanalib_nodeaccess_group');
+      Cache::invalidateTags(['node:' . $nid]);
+    }
   }
-
 }
