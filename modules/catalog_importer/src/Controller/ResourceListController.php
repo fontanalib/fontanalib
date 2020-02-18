@@ -55,8 +55,8 @@ class ResourceListController extends ItemListController {
       return $build;
     }
 
-    $entity_ids = $this->entityTypeManager()->getStorage($processor->entityType())->getQuery()
-      ->condition('field_resource_importer_id', $feeds_feed->id())
+    $entity_ids = $this->entityTypeManager()->getStorage('catalog_item')->getQuery()
+      ->condition('catalog_importer_id', $feeds_feed->id())
       ->pager(50)
       ->sort('feeds_item.imported', 'DESC')
       ->execute();
@@ -103,7 +103,7 @@ class ResourceListController extends ItemListController {
     }
 
     $build['pager'] = ['#type' => 'pager'];
-    $build['#title'] = $this->t('%title items', ['%title' => $feeds_feed->label()]);
+    $build['#title'] = $this->t('%title items Testing123', ['%title' => $feeds_feed->label()]);
 
     return $build;
   }

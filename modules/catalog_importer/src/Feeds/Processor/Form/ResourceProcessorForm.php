@@ -164,7 +164,7 @@ class ResourceProcessorForm extends ExternalPluginFormBase {
   protected function getUpdateNonExistentActions() {
     $options = [];
 
-    $action_definitions = \Drupal::service('plugin.manager.action')->getDefinitionsByType('node');
+    $action_definitions = \Drupal::service('plugin.manager.action')->getDefinitionsByType('catalog_item');
     foreach ($action_definitions as $definition) {
       // Filter out configurable actions.
       $interfaces = class_implements($definition['class']);

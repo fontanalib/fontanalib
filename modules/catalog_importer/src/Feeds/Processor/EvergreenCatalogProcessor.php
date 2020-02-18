@@ -14,6 +14,8 @@ use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\Query\QueryFactory;
 
 use Drupal\feeds\Feeds\State\CleanStateInterface;
+use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\field\Entity\FieldConfig;
 
 use Drupal\feeds\Plugin\Type\PluginBase;
 
@@ -32,13 +34,12 @@ use Drupal\feeds\Plugin\Type\PluginBase;
  *   },
  *   form = {
  *     "configuration" = "Drupal\feeds\Feeds\Processor\Form\DefaultEntityProcessorForm",
- *     "option" = "Drupal\feeds\Feeds\Processor\Form\EntityProcessorOptionForm",
+ *     "option" = "Drupal\catalog_item\Feeds\Processor\Form\EvergreenCatalogProcessorOptionForm",
  *   },
  * )
  */
-//  *     "option" = "Drupal\feeds\Feeds\Processor\Form\EntityProcessorOptionForm",
 
-class EvergreenResourceProcessor extends EntityProcessorBase {
+class EvergreenCatalogProcessor extends EntityProcessorBase {
   protected $source_url;
   protected $feed_id;
   /**
