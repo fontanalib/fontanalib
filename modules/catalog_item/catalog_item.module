@@ -1518,6 +1518,7 @@ function taxonomy_build_catalog_item_index($catalog_item) {
  * Implements hook_ENTITY_TYPE_update() for catalog_item entities.
  */
 function catalog_item_catalog_item_update($catalog_item) {
+  // CHECK THIS -- repeated updates for imported catalog items
   \Drupal::logger('catalog_item')->error('Catalog Item @label updating....', array(
     '@label'  => $catalog_item->id(),
   ));
@@ -1546,13 +1547,7 @@ function catalog_item_catalog_item_predelete($catalog_item) {
  *   The catalog_item entity.
  */
 function taxonomy_delete_catalog_item_index($catalog_item) {
-  \Drupal::logger('catalog_item')->error('Attempting delete... @label', array(
-    '@label'  => $catalog_item->id(),
-  ));
   if (\Drupal::config('taxonomy.settings')->get('maintain_index_table')) {
-    \Drupal::logger('catalog_item')->error('Deleting index for @label ....', array(
-      '@label'  => $catalog_item->id(),
-    ));
     \Drupal::database()->delete('catalog_taxonomy_index')->condition('nid', $catalog_item->id())->execute();
   }
 }

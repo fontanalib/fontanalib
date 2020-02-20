@@ -47,15 +47,12 @@ class EvergreenCatalogProcessor extends EntityProcessorBase {
    * {@inheritdoc}
    */
   public function process(FeedInterface $feed, ItemInterface $item, StateInterface $state) {
-    \Drupal::logger('catalog_importer')->notice("Start processing..");
     // Initialize clean list if needed.
     $clean_state = $feed->getState(StateInterface::CLEAN);
     if (!$clean_state->initiated()) {
-      \Drupal::logger('catalog_importer')->notice("initCleanList..");
       $this->initCleanList($feed, $clean_state);
     }
     if(!$this->feed_id){
-      \Drupal::logger('catalog_importer')->notice("Feed id: " . $feed->id());
       $this->feed_id = $feed->id();
     }
 
@@ -65,19 +62,16 @@ class EvergreenCatalogProcessor extends EntityProcessorBase {
     // If the entity is an existing entity it must be removed from the clean
     // list.
     if ($existing_entity_id) {
-      \Drupal::logger('catalog_importer')->notice("cleaning $existing_entity_id");
       $clean_state->removeItem($existing_entity_id);
     }
 
     // Bulk load existing entities to save on db queries.
     if ($skip_existing && $existing_entity_id) {
-      \Drupal::logger('catalog_importer')->notice("skipping $existing_entity_id");
       return;
     }
 
     // Delay building a new entity until necessary.
     if ($existing_entity_id) {
-      \Drupal::logger('catalog_importer')->notice("loading $existing_entity_id");
       $entity = $this->storageController->load($existing_entity_id);
     }
 
