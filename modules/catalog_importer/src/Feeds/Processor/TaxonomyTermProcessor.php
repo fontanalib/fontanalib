@@ -1,6 +1,7 @@
 <?php
 
 namespace Drupal\catalog_importer\Feeds\Processor;
+use Drupal\feeds\Feeds\Processor\EntityProcessorBase;
 
 /**
  * Defines a taxonomy term processor.
