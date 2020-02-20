@@ -66,11 +66,13 @@ class EvergreenModsParser extends PluginBase implements ParserInterface {
         $authors = $this->getCreators($item);
         $yourItem->set('creators', $authors['names']);
         $yourItem->set('roles', $authors['roles']);
+        $yourItem->set('item_creators', $authors['authors']);
 
 
         $identifiers = $this->processIdentifiers($item);
         $types = array_map('strval', array_values($identifiers['identifiers']));
         $yourItem->set('identifier_types', $types);
+        $yourItem->set('item_ids', $identifiers['item_ids']);
         $ids = array_map('strval', array_keys($identifiers['identifiers']));
         $yourItem->set('identifier_ids', $ids);
         $yourItem->set('isbn', $identifiers['isbns']);
@@ -119,6 +121,14 @@ class EvergreenModsParser extends PluginBase implements ParserInterface {
       'description' => [
         'label' => $this->t('Description'),
         'description' => $this->t('Resource abstract/description'),
+      ],
+      'item_creators'=> [
+        'label' => $this->t('ITEM CREATORS'),
+        'description' => $this->t('Resource creators and their roles'),
+      ],
+      'item_ids'=> [
+        'label' => $this->t('ITEM IDs'),
+        'description' => $this->t('Resource isbns and identifiers'),
       ],
       'featured_collection' => [
         'label' => $this->t('Featured Collection'),
@@ -180,7 +190,8 @@ class EvergreenModsParser extends PluginBase implements ParserInterface {
   public function processIdentifiers($item){
     $array = array(
       'identifiers' => array(),
-      'isbns'       => array()
+      'isbns'       => array(),
+      'item_ids'=>array()
     );
     foreach($item->identifier as $identifier){
       $attributes = $identifier->attributes();
@@ -191,6 +202,10 @@ class EvergreenModsParser extends PluginBase implements ParserInterface {
       }
       $identifier = (string) $identifier;
       $array['identifiers'][$identifier] = $attr;
+      $array['items_ids'][] = [
+        'field_identifier_id'=>$identifier,
+        'field_identifier_type'=>$attr
+      ];
       if(strtolower($attr) == 'isbn'){
         $isbn = preg_replace('/\D/', '', $identifier);
         if (strlen($isbn) === 9) {
@@ -355,7 +370,8 @@ class EvergreenModsParser extends PluginBase implements ParserInterface {
   public function getCreators($item){
     $creators = array(
       'names' => array(),
-      'roles' => array()
+      'roles' => array(),
+      'authors' => array(),
     );
    
     if(!isset($item->name)){
@@ -369,6 +385,10 @@ class EvergreenModsParser extends PluginBase implements ParserInterface {
         $roles[]= (string) $role->roleTerm;
       }
       $creators['roles'][] = implode(", ", array_filter($roles));
+      $creators['authors'][] = [
+        'field_creator_name'=> (string) $author->namePart[0],
+        'field_creator_role' => implode(", ", array_filter($roles))
+      ];
     }
   
    return $creators; 

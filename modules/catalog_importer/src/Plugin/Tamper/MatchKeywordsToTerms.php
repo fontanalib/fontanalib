@@ -290,7 +290,7 @@ class MatchKeywordsToTerms extends TamperBase {
         return $key;
       } 
       
-      if(in_array($checkValue, $search[$key]['matches'])){
+      if(isset($search[$key]['matches']) && in_array($checkValue, $search[$key]['matches'])){
         return $key;
       }
       if(isset($search[$key]['contains_all'])){
@@ -333,10 +333,12 @@ class MatchKeywordsToTerms extends TamperBase {
             return $key;
           }
         } 
-      } 
-      foreach($search[$key]['contains'] as $partial){
-        if(strpos($checkValue, $partial) !== FALSE){
-          return $key;
+      }
+      if(isset($search[$key]['contains'])){
+        foreach($search[$key]['contains'] as $partial){
+          if(strpos($checkValue, $partial) !== FALSE){
+            return $key;
+          }
         }
       }
     }

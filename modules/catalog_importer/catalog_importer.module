@@ -4,6 +4,7 @@ use Drupal\taxonomy\Entity\Term;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\taxonomy\VocabularyInterface;
+use Drupal\taxonomy\Entity\Vocabulary;
 /**
  * @file
  * Contains catalog_importer.module.
@@ -73,15 +74,24 @@ function catalog_importer_add_term_fields(VocabularyInterface $type, $field_id, 
  * Alters the fontalib admin settings form
  *
  */
-function catalog_importer_form_fontanalib_admin_settings_alter(&$form, FormStateInterface $form_state, $form_id) {
+function catalog_importer_form_fontanalib_admin_settings_alter(&$form, $form_state, $form_id) {
+  $options = array();
+  $vocabularies = Vocabulary::loadMultiple();
+  if($vocabularies){
+    foreach($vocabularies as $vid => $vocab){
+      $options[$vid] = $vocab->get('name');
+    }
+  }
+  
+    
   $config = \Drupal::config('fontanalib.settings');
   $form['#tree'] = TRUE;
     $cached_vocabs = $config->get('catalog_importer_cached_vocabs');
-    $options = catalog_importer_getVocabularies();
+    
     $form['vocab_settings'] = array(
       '#tree'   => TRUE,
       '#type'  => 'fieldset',
-      '#title' => $this->t('Catalog Taxonomy settings'),
+      '#title' => t('Catalog Taxonomy settings'),
     );
     $form['vocab_settings']['actions']['delete'] = array(
       '#type' => 'submit',
@@ -95,20 +105,20 @@ function catalog_importer_form_fontanalib_admin_settings_alter(&$form, FormState
     $form['vocab_settings']['catalog_vocabularies'] = [
       '#tree' => TRUE,
       '#type' => 'checkboxes',
-      '#title' => $this->t('Catalog Vocabularies'),
-      '#default_value' => $cached_vocabs,
+      '#title' => t('Catalog Vocabularies'),
+      '#default_value' => (array) $cached_vocabs,
       '#options'  => $options,
-      '#description' => $this->t('Select the vocabularies that should be cached for use with keyword matching in the Catalog Importer.'),
+      '#description' => t('Select the vocabularies that should be cached for use with keyword matching in the Catalog Importer.'),
     ];
-    
-    if(!empty($cached_vocabs)){
+ 
+    if($cached_vocabs && !empty($cached_vocabs)){
       $settings = $config->get('catalog_importer_vocab_settings');
       foreach($cached_vocabs as $vocab){
         $diffed = array_diff($cached_vocabs, [$vocab]);
         $form['vocab_settings']['config'][$vocab] = array(
           '#tree'   => TRUE,
           '#type'  => 'fieldset',
-          '#title' => $this->t($vocab . ' settings'),
+          '#title' => t($vocab . ' settings'),
         );
 
         $form['vocab_settings']['config'][$vocab]['actions']['delete'] = array(
@@ -118,14 +128,21 @@ function catalog_importer_form_fontanalib_admin_settings_alter(&$form, FormState
           '#prefix' => '<div style="float:right;">',
           '#suffix' => '</div>',
          );
+         
+       $vOptions = array();
+       foreach($options as $vid=> $label){
+         if(in_array($vid, $diffed)){
+           $vOptions[$vid]=$label;
+         }
+       }
        
         $form['vocab_settings']['config'][$vocab]['diff'] = [
           '#tree' => TRUE,
           '#type' => 'checkboxes',
-          '#title' => $this->t('Vocabularies to filter out'),
+          '#title' => t('Vocabularies to filter out'),
           '#default_value' => !empty($settings) && isset($settings[$vocab]) && isset($settings[$vocab]['diff']) ? $settings[$vocab]['diff'] : [],
-          '#options'  => $this->catalog_importer_getVocabularies($diffed),
-          '#description' => $this->t("Select the vocabularies whose terms should be filtered out when parsing terms during import. (i.e. remove genre terms so they aren't duplicated in the topic taxonomy.)"),
+          '#options'  => $vOptions,
+          '#description' => t("Select the vocabularies whose terms should be filtered out when parsing terms during import. (i.e. remove genre terms so they aren't duplicated in the topic taxonomy.)"),
         ];
         
       }
@@ -142,7 +159,18 @@ function catalog_importer_getVocabularies($vids = null){
   }
   return $option;
 }
-function catalog_importer_fontanalib_admin_settings_submit(array &$form, FormStateInterface $form_state) {
+function catalog_importer_feeds_target_plugins_alter(array &$definitions) {
+  // Our plugin serves same target type as the one from paragraphs module.
+  // So we must disable that one.
+  // dd($definitions);
+  // unset($definitions['paragraphs']);
+  // $definitions['paragraphs']["class"] = "Drupal\catalog_importer\Feeds\Target\Paragraphs";
+  // $definitions['paragraphs']["class"] = "Drupal\catalog_importer\Feeds\Target\Paragraphs";
+  // $definitions['paragraphs']["provider"] = "catalog_importer";
+  // $definitions['paragraphs']["form"]["configuration"] ="Drupal\catalog_importer\Feeds\Target\Paragraphs";
+  // dd($definitions);
+}
+function catalog_importer_fontanalib_admin_settings_submit(array &$form, $form_state) {
   $values = $form_state->getValues();
   $config = \Drupal::service('config.factory')->getEditable('fontanalib.settings');
   $vocabs = array();

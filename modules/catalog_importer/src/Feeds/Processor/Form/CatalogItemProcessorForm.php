@@ -12,15 +12,15 @@ use Drupal\user\Entity\User;
 /**
  * The configuration form for the CSV parser.
  */
-class ResourceProcessorForm extends ExternalPluginFormBase {
+class CatalogItemProcessorForm extends ExternalPluginFormBase {
 
   /**
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $tokens = [
-      '@entity' => mb_strtolower('resource'),
-      '@entities' => mb_strtolower('resources'),
+      '@entity' => mb_strtolower($this->plugin->entityTypeLabel()),
+      '@entities' => mb_strtolower($this->plugin->entityTypeLabelPlural()),
     ];
 
     $form['update_existing'] = [
@@ -69,7 +69,40 @@ class ResourceProcessorForm extends ExternalPluginFormBase {
       '#description' => $this->t('Select after how much time @entities should be deleted.', $tokens),
       '#default_value' => $this->plugin->getConfiguration('expire'),
     ];
+    $fields = $this->getFieldConfigurations();
+    $form['preserve_fields'] = [
+      '#parents' => ['processor_configuration', 'preserve_fields'],
+      '#type' => 'checkboxes',
+      '#title' => $this->t('Preserve @entities field values', $tokens),
+      '#description' => t('Select the fields to preserve values of.'),
+      '#options' => array_combine(array_column($fields, 'name'), array_column($fields, 'name')),
+      '#default_value' => $this->plugin->getConfiguration('preserve_fields'),
+    ];
+  $multi = array_column(array_filter($fields, function ($field) {
+      return ($field['multivalue'] == TRUE);
+  }), 'name');
+  $multi = array_combine($multi, $multi);
+  $form['multi'] = [
+    '#type' => 'hidden',
+    '#value' => $multi,
+  ];
+// $values = $form_state->getValues();
+//$options= array_intersect($form['processor_configuration']['multi']['#value'], $form['processor_configuration']['preserve_fields']['#value']);
+  
+//$options= isset($form['processor_configuration']['preserve_fields']['#value']) ? array_intersect($multi, $form['processor_configuration']['preserve_fields']['#value']) : [];
+// $form['processor_configuration']['append_fields']['#options'] = $options;
+$preserve_fields = $this->plugin->getConfiguration('preserve_fields') && is_array($this->plugin->getConfiguration('preserve_fields')) ? $this->plugin->getConfiguration('preserve_fields') : [];
+$options = array_intersect($multi, $preserve_fields);
 
+  $form['append_fields'] = array(
+    '#type' => 'checkboxes',
+    '#title' =>  $this->t('Append new values to @entities multi-value fields', $tokens),
+    '#description' => t('Of the "preserved fields" selected above, select the multi-value fields where new values should be added to the preserved values. (May require saving changes if settings changed above).'),
+    '#default_value'=> $this->plugin->getConfiguration('append_fields'),
+    '#options'  => $options,
+  );
+
+    
     // @todo Remove hack.
     $entity_type = \Drupal::entityTypeManager()->getDefinition($this->plugin->entityType());
 
@@ -130,13 +163,30 @@ class ResourceProcessorForm extends ExternalPluginFormBase {
 
     return $form;
   }
-
+ 
   /**
    * {@inheritdoc}
    */
   public function validateConfigurationForm(array &$form, FormStateInterface $form_state) {
+    $form_state->setValue('preserve_fields', array_keys(array_filter($form_state->getValue('preserve_fields'))),[]);
+    $form_state->setValue('append_fields', array_keys(array_filter($form_state->getValue('append_fields'))),[]);
     $form_state->setValue('owner_id', (int) $form_state->getValue('owner_id', 0));
+
+    // $form_state->set('preserve_fields', $form_state->getValue('preserve_fields'));
+    // $form_state->set('append_fields', $form_state->getValue('append_fields'));
+    // dd( $form_state->getValue('preserve_fields'));
+    
   }
+
+  //  /**
+  //  * {@inheritdoc}
+  //  */
+  // public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
+  //   $form_state->set('preserve_fields', $form_state->getValue('preserve_fields'));
+  //   $form_state->set('append_fields', $form_state->getValue('append_fields'));
+  //   parent::submitConfigurationForm($form,$form_state);
+    
+  // }
 
   /**
    * Formats UNIX timestamps to readable strings.
@@ -164,7 +214,7 @@ class ResourceProcessorForm extends ExternalPluginFormBase {
   protected function getUpdateNonExistentActions() {
     $options = [];
 
-    $action_definitions = \Drupal::service('plugin.manager.action')->getDefinitionsByType('catalog_item');
+    $action_definitions = \Drupal::service('plugin.manager.action')->getDefinitionsByType($this->plugin->entityType());
     foreach ($action_definitions as $definition) {
       // Filter out configurable actions.
       $interfaces = class_implements($definition['class']);
@@ -184,6 +234,24 @@ class ResourceProcessorForm extends ExternalPluginFormBase {
       '_keep' => $this->t('Keep'),
       '_delete' => $this->t('Delete'),
     ] + $options;
+  }
+  /**
+   * Get available actions to apply on the entity.
+   *
+   * @return array
+   *   A list of applyable actions.
+   */
+  protected function getFieldConfigurations() {
+    $options = [];
+    foreach ( \Drupal::service('entity_field.manager')->getFieldDefinitions($this->plugin->entityType(), 'evergreen') as $field_name => $field_definition) {
+      if(!$field_definition->isReadOnly() && strpos($field_name, 'revision') === false && strpos($field_name, 'langcode') === false){
+        $options[] = [
+          'name' => $field_name,
+          'multivalue'=> $field_definition->getFieldStorageDefinition()->getCardinality() == 1 ? FALSE : TRUE
+        ];
+      }
+    }
+    return $options;
   }
 
 }

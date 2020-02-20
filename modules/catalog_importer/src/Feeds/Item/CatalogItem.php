@@ -13,6 +13,8 @@ class CatalogItem extends BaseItem {
   protected $active_date;
   protected $alt_titles;
   protected $audience;
+  protected $item_creators;
+  protected $item_ids;
   protected $creators;
   protected $roles;
   protected $description;

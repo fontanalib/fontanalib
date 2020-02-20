@@ -24,6 +24,7 @@ class ImporterFunctions{
     }
 
     $keyword_fields = \Drupal::config('fontanalib.settings')->get('catalog_importer_keyword_fields');
+    
     $terms =\Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadTree($vid); //, 0, NULL, TRUE
     $search = array();
     foreach ($terms as $term) {
@@ -38,13 +39,14 @@ class ImporterFunctions{
       }
       $term = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->load($tid);
 
-      $fields = array_combine( array_keys($keywords_fields), array(
+      $fields = array_combine(array_keys($keyword_fields), array(
         'matches',
         'starts',
         'ends',
         'contains',
         'contains_all',
         'priority'));
+        
       foreach($fields as $field => $indicator){
         $values = $term->get($field)->getValue();
         if(empty($values)){

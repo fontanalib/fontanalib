@@ -16,15 +16,14 @@ use Drupal\Core\Entity\Query\QueryFactory;
 use Drupal\feeds\Feeds\State\CleanStateInterface;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\field\Entity\FieldConfig;
-
-use Drupal\feeds\Plugin\Type\PluginBase;
+use Drupal\feeds\Entity\FeedType;
 
 /**
- * Defines an entity_test processor.
+ * Defines a catalog_item entity processor.
  *
  * @FeedsProcessor(
- *   id = "evergreen_catalog_processor",
- *   title = @Translation("Evergreen Catalog Item"),
+ *   id = "entity:catalog_item",
+ *   title = @Translation("Catalog Item"),
  *   description = @Translation("Creates catalog items from Evergreen feed items."),
  *   entity_type = "catalog_item",
  *   arguments = {
@@ -33,8 +32,8 @@ use Drupal\feeds\Plugin\Type\PluginBase;
  *     "@entity_type.bundle.info",
  *   },
  *   form = {
- *     "configuration" = "Drupal\feeds\Feeds\Processor\Form\DefaultEntityProcessorForm",
- *     "option" = "Drupal\catalog_item\Feeds\Processor\Form\EvergreenCatalogProcessorOptionForm",
+ *     "configuration" = "Drupal\catalog_importer\Feeds\Processor\Form\CatalogItemProcessorForm",
+ *     "option" = "Drupal\feeds\Feeds\Processor\Form\EntityProcessorOptionForm",
  *   },
  * )
  */
@@ -42,39 +41,21 @@ use Drupal\feeds\Plugin\Type\PluginBase;
 class EvergreenCatalogProcessor extends EntityProcessorBase {
   protected $source_url;
   protected $feed_id;
-  /**
-   * Array containing field ids with previous values that should be preserved as keys and 
-   * values indicating whether the previous values should be preserved as is (1) or appended to (0)
-   * 
-   * @todo make the configurable via form
-   */
-  protected $preserve = array(
-    'field_catalog_audience'=> 1,
-    'field_catalog_genre' => 1,
-    'field_catalog_id'=> 1,
-    'field_catalog_identifier' => 0,
-    'field_catalog_isbn' => 1,
-    'title' => 1,
-    'status' => 1,
-    'field_description' => 1,
-    'field_catalog_image' => 1,
-    'field_catalog_url' => 1,
-    'catalog_importer_id' => 0,
-    'field_featured_collection' => 0,
-    'field_catalog_keyword'  => 0,
-    'feeds_item' => 0,
-  );
+  
   
   /**
    * {@inheritdoc}
    */
   public function process(FeedInterface $feed, ItemInterface $item, StateInterface $state) {
+    \Drupal::logger('catalog_importer')->notice("Start processing..");
     // Initialize clean list if needed.
     $clean_state = $feed->getState(StateInterface::CLEAN);
     if (!$clean_state->initiated()) {
+      \Drupal::logger('catalog_importer')->notice("initCleanList..");
       $this->initCleanList($feed, $clean_state);
     }
     if(!$this->feed_id){
+      \Drupal::logger('catalog_importer')->notice("Feed id: " . $feed->id());
       $this->feed_id = $feed->id();
     }
 
@@ -84,16 +65,19 @@ class EvergreenCatalogProcessor extends EntityProcessorBase {
     // If the entity is an existing entity it must be removed from the clean
     // list.
     if ($existing_entity_id) {
+      \Drupal::logger('catalog_importer')->notice("cleaning $existing_entity_id");
       $clean_state->removeItem($existing_entity_id);
     }
 
     // Bulk load existing entities to save on db queries.
     if ($skip_existing && $existing_entity_id) {
+      \Drupal::logger('catalog_importer')->notice("skipping $existing_entity_id");
       return;
     }
 
     // Delay building a new entity until necessary.
     if ($existing_entity_id) {
+      \Drupal::logger('catalog_importer')->notice("loading $existing_entity_id");
       $entity = $this->storageController->load($existing_entity_id);
     }
 
@@ -144,7 +128,8 @@ class EvergreenCatalogProcessor extends EntityProcessorBase {
       $state->setMessage($e->getMessage(), 'warning');
     }
   }
-/**
+
+ /**
    * {@inheritdoc}
    */
   public function entityLabel() {
@@ -156,19 +141,6 @@ class EvergreenCatalogProcessor extends EntityProcessorBase {
    */
   public function entityLabelPlural() {
     return $this->t('Catalog Items');
-  }
-  /**
-   * Bundle type this processor operates on.
-   *
-   * Defaults to the entity type for entities that do not define bundles.
-   *
-   * @return string|null
-   *   The bundle type this processor operates on, or null if it is undefined.
-   *
-   * @todo We should be more careful about missing bundles.
-   */
-  public function bundle() {
-    return 'evergreen';
   }
 
   /**
@@ -197,7 +169,7 @@ class EvergreenCatalogProcessor extends EntityProcessorBase {
         continue;
       }
       
-      if(!in_array($mapping['target'], array_keys($this->preserve))){
+      if(!in_array($mapping['target'], $this->configuration['preserve_fields'])){
         unset($entity->{$mapping['target']});
       } 
     }
@@ -239,16 +211,39 @@ class EvergreenCatalogProcessor extends EntityProcessorBase {
       }
     }
 
+     // /**
+  //  * Array containing field ids with previous values that should be preserved as keys and 
+  //  * values indicating whether the previous values should be preserved as is (1) or appended to (0)
+  //  * 
+  //  * @todo make the configurable via form
+  //  */
+  // protected $preserve = array(
+  //   'field_catalog_audience'=> 1,
+  //   'field_catalog_genre' => 1,
+  //   'field_catalog_id'=> 1,
+  //   'field_catalog_identifier' => 0,
+  //   'field_catalog_isbn' => 1,
+  //   'title' => 1,
+  //   'status' => 1,
+  //   'field_description' => 1,
+  //   'field_catalog_image' => 1,
+  //   'field_catalog_url' => 1,
+  //   'catalog_importer_id' => 0,
+  //   'field_featured_collection' => 0,
+  //   'field_catalog_keyword'  => 0,
+  //   'feeds_item' => 0,
+  // );
+
     // Set target values.
     foreach ($mappings as $delta => $mapping) {
       $plugin = $this->feedType->getTargetPlugin($delta);
 
-      if ( isset($field_values[$mapping['target']]) && !in_array($mapping['target'], array_keys($this->preserve)) ) {
+      if ( isset($field_values[$mapping['target']]) && !in_array($mapping['target'], $this->configuration['preserve_fields']) ) {
         $plugin->setTarget($feed, $entity, $mapping['target'], $field_values[$mapping['target']]);
         continue;
       }
 
-      if ( isset($field_values[$mapping['target']]) && !in_array($mapping['target'], array_keys(array_filter($this->preserve))) ) {
+      if ( isset($field_values[$mapping['target']]) && in_array($mapping['target'], $this->configuration['append_fields']) ) {
         // Get information about field config
         $multiple = $entity->get($mapping['target'])->getFieldDefinition()->getFieldStorageDefinition()->isMultiple();
         $field_type = $entity->get($mapping['target'])->getFieldDefinition()->getType();
@@ -554,5 +549,14 @@ class EvergreenCatalogProcessor extends EntityProcessorBase {
       }
       
     }
+  }
+  /**
+   * {@inheritdoc}
+   */
+  public function defaultConfiguration() {
+    return parent::defaultConfiguration() + [
+      'preserve_fields' => [],
+      'append_fields' => [],
+    ];
   }
 }
