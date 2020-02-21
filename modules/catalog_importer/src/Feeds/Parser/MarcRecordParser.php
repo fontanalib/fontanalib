@@ -36,12 +36,7 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
    */
   private $record_end = "\x1D";
 
-  // 00 = personal
-  // 10 = corporate
-  // 11 = conference
-  // 20 = uncontrolled
-  // 30 = Uniform Title
-  // 40 
+
   private $author_fields = array('700', '710', '100', '110', '111', '711', '720', '264'); //'730','740','751', '752', '753', '754', 
   private $series_fields = array('440', '490', '810', '811', '830');
   private $title_fields = array('245', '130', '240', '246', '247', '440', '490', '500', '505', '700', '710', '711', '730', '740', '780', '800', '810', '811', '830', '840');
@@ -56,58 +51,21 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
     $marc_records = explode($this->record_end, $raw);
 
     foreach ($marc_records as $record) {
-      if (!empty($record)) {
-        $item = $this->parseItems($record);
-        dd($item);
-        $yourItem = new CatalogItem();
-        // Process out the $item into an easily usable data set.
-        $yourItem->set('guid', (string) $item['id']);
-        $yourItem->set('tcn', (string) $item['id']);
-        $yourItem->set('active_date', (string) $item['active_date']);
-        $yourItem->set('title', $item['title']);
-        
-        // $yourItem->set('alt_titles', $titleArray);
+      $marc_record = $this->getMarcFields($marc_record);
 
-        $yourItem->set('audience', $item['audience']);
-        $yourItem->set('genre', $item['genre']);
-        $yourItem->set('topics', $item['topics']);
-
-        // $yourItem->set('type', $this->getItemKeywords($item, 'type'));
-        // $yourItem->set('form', $this->getItemKeywords($item, 'form'));
-        // $yourItem->set('classification', $this->getItemKeywords($item, 'ddc'));
-
-        $yourItem->set('creators', $authors['names']);
-        $yourItem->set('roles', $authors['roles']);
-        $yourItem->set('item_creators', $authors['authors']);
-
-
-        $identifiers = $this->processIdentifiers($item);
-        $types = array_map('strval', array_values($identifiers['identifiers']));
-        $yourItem->set('identifier_types', $types);
-        $yourItem->set('item_ids', $identifiers['item_ids']);
-        $ids = array_map('strval', array_keys($identifiers['identifiers']));
-        $yourItem->set('identifier_ids', $ids);
-        $yourItem->set('isbn', $identifiers['isbns']);
-
-        $description = $this->getResourceDescription($item);
-        $yourItem->set('description', $description);
+      if(empty($marc_record['leader'])){
+        continue;
       }
-      $result->addItem($yourItem);
+
+      $item = $this->mapMarcFields($marc_record);
+      $result->addItem($item);
     }
+
     return $result;
   }
 /**
    * Parse all of the items from the MARC record
    */
-  protected function parseItems($marc_record) {
-    $marc_record = $this->getMarcFields($marc_record);
-    if(empty($marc_record['leader'])){
-      return null;
-    }
-    $record = $this->mapMarcFields($marc_record);
-
-    return $record;
-  }
   private function getMarcFields($marc_record){
     $marc_field_values = explode($this->field_end, $marc_record);
   
@@ -172,7 +130,7 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
   }
 
   private function mapMarcFields($marc_record){
-    dd($marc_record);
+    //dd($marc_record);
     $record = array(
       'creators' => array(), 
       'description' => array(),
@@ -278,19 +236,16 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
           }
       }
     }
-
-
-
-    $record = array(
-      'creators' => array(), 
-      'description' => array(),
-      'urls' => '', // 856[0][u]
-      'cover' => '',
-      'topics' => array(), // 650
-      'genre' => array(), // 655
-      'audience' => array(),
-      'titles' => array(),
-    );
+    // $record = array(
+    //   'creators' => array(), 
+    //   'description' => array(),
+    //   'urls' => '', // 856[0][u]
+    //   'cover' => '',
+    //   'topics' => array(), // 650
+    //   'genre' => array(), // 655
+    //   'audience' => array(),
+    //   'titles' => array(),
+    // );
     $catalog_item->set('alt_titles', $record['titles']);
     $catalog_item->set('audience', $record['audience']);
     $catalog_item->set('genre', $record['genre']);
@@ -300,9 +255,12 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
     // $catalog_item->set('classification', $this->getItemKeywords($item, 'ddc'));
     $catalog_item->set('creators', $record['creators']['names']);
     $catalog_item->set('roles', $record['creators']['roles']);
+    $catalog_item->set('image', $record['cover']);
+    $catalog_item->set('description', implode("<br/><br/>", array_filter($record['description'])));
 
-    return $record;
+    return $catalog_item;
   }
+
   private function getStringField($array, $field_number, $separator = " "){
     $field_number = strval($field_number);
     $field = array_merge(array(), $array);
