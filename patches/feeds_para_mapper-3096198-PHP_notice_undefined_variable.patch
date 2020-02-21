@@ -1,0 +1,13 @@
+diff --git a/src/Importer.php b/src/Importer.php
+index e5f9ca7..c7af845 100644
+--- a/src/Importer.php
++++ b/src/Importer.php
+@@ -724,7 +724,7 @@ class Importer {
+         $has_common = TRUE;
+         $empty_commons = array();
+         foreach ($in_common as $fieldInfo) {
+-          if (!isset($entities[$i]->{$field['name']})) {
++          if (!$entities[$i]->hasField($fieldInfo['name'])) {
+             $empty_commons[] = $fieldInfo;
+           }
+         }
