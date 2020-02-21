@@ -159,6 +159,9 @@ class MatchKeywordsToTerms extends TamperBase {
    * {@inheritdoc}
    */
   public function tamper($data, TamperableItemInterface $item = NULL) {
+    \Drupal::logger('catalog_importer')->notice('RAW: <pre>@exclude</pre>', array(
+      '@exclude'  => print_r($data, TRUE),
+    )); 
     $vocab = $this->getSetting(self::SETTING_OPERATION);
     $catalog_vocabularies = \Drupal::config('fontanalib.settings')->get('catalog_importer_cached_vocabs');
 
@@ -212,7 +215,10 @@ class MatchKeywordsToTerms extends TamperBase {
 
     // if($this->getSetting(self::SETTING_REDUCE)){
     //   return $this->reduceAudience($terms, $vocab);
-    // } 
+    // }
+    \Drupal::logger('catalog_importer')->notice('terms <pre>@exclude</pre>', array(
+      '@exclude'  => print_r($terms, TRUE),
+    )); 
 
    return $this->getSetting(self::SETTING_REDUCE) ? $this->reduceAudience($terms, $vocab) : array_unique($terms);
   }
