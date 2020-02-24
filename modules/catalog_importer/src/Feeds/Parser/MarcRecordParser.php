@@ -39,7 +39,7 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
 
   private $author_fields = array('700', '710', '100', '110', '111', '711', '720', '264'); //'730','740','751', '752', '753', '754', 
   private $series_fields = array('440', '490', '810', '811', '830');
-  private $title_fields = array('245', '130', '240', '246', '247', '440', '490', '500', '505', '700', '710', '711', '730', '740', '780', '800', '810', '811', '830', '840');
+  private $title_fields = array('245', '130', '210', '222', '240', '242', '243', '246', '247', '730', '740'); //'240', '246', '247', '440', '490', '500', '505', '700', '710', '711', '730', '740', '780', '800', '810', '811', '830', '840'
   private $subject_fields = array('600', '610', '611', '630', '648', '650', '651', '653', '654', '655', '656', '657', '658', '662', '690', '691', '692', '693', '694', '695', '696', '697', '698', '699');
   private $audience_fields = array('521','385');
   /**
@@ -51,12 +51,14 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
     $marc_records = explode($this->record_end, $raw);
 
     foreach ($marc_records as $record) {
-      $marc_record = $this->getMarcFields($marc_record);
+      $marc_record = $this->getMarcFields($record);
 
       if(empty($marc_record['leader'])){
         continue;
       }
-
+      \Drupal::logger('catalog_importer')->notice('RECORD: <pre>@exclude</pre>', array(
+        '@exclude'  => print_r($marc_record, TRUE),
+      )); 
       $item = $this->mapMarcFields($marc_record);
       $result->addItem($item);
     }
@@ -134,12 +136,13 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
     $record = array(
       'creators' => array(), 
       'description' => array(),
-      'urls' => '', // 856[0][u]
+      'urls' => array(), // 856[0][u]
       'cover' => '',
       'topics' => array(), // 650
       'genre' => array(), // 655
       'audience' => array(),
       'titles' => array(),
+      'title' => ''
     );
     $catalog_item = new CatalogItem();
 
@@ -170,66 +173,86 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
         case '546':
           $info[0]['a'] = implode(", ", explode(",",$info[0]['a']));
         case '520':
-          $record['description'][] = $this->getFieldArray($info); break;
+          //$record['description'][] = $this->getFieldArray($info); break;
+          array_unshift($record['description'], implode(';', $this->getFieldArray($info))); break;
         default:
-          $k = ltrim($key, '0');
+          $k = ltrim($field, '0');
           if($k >= 100 && $k !== 'leader' && ($k < 300 || $k >= 400) && !in_array($k, $this->subject_fields)){
             $record['description'][] = implode("; ", $this->getFieldArray($info, " "));
           }
-          if(in_array($key, $this->author_fields)){
-            $k = substr($key, -2);
+          if(in_array($field, $this->author_fields)){
+            \Drupal::logger('catalog_importer')->notice("CREATOR- $field: <pre>@exclude</pre>", array(
+              '@exclude'  => print_r($info, TRUE),
+            )); 
+            $k = substr($field, -2);
             switch($k){
               case '00':
                 foreach($info as $i => $val){
-                  $record['creators']['names'][] = isset($val['a']) ? $val['a'] : isset($val['q']) ? $val['q'] : (string) $val;
-                  $record['creators']['roles'][] = isset($val['b']) ? $val['b'] : isset($val['c']) ? $val['c'] : 'creator';
+                  $name = isset($val['a']) ? $val['a'] : array_key_exists('q', $val) ? (string) $val['q'] : (string) $val;
+                  if(!empty($name)){
+                    $record['creators']['names'][] = $name;
+                    $record['creators']['roles'][] = isset($val['b']) ? (string) $val['b'] : isset($val['e']) ? (string) $val['e'] : array_key_exists('c', $val) ? (string) $val['c'] : 'creator';
+                  }
                 } break;
               case '10':
                 foreach($info as $i => $val){
-                  $record['creators']['names'][] = isset($val['a']) ? $val['a'] : isset($val['b']) ? $val['b'] : (string) $val;
-                  $record['creators']['roles'][] = isset($val['e']) ? $val['e'] : isset($val[4]) ? $val[4] : 'creator';
+                  $name = isset($val['a']) ? (string) $val['a'] : array_key_exists('b', $val) ? (string) $val['b'] : (string) $val;
+                  if(!empty($name)){
+                    $record['creators']['names'][] = $name;
+                    $record['creators']['roles'][] = isset($val['e']) ? (string) $val['e'] : array_key_exists(4, $val) ? (string) $val[4] : 'creator';
+                  }
+                  
                 } break;
               case '11':
                 foreach($info as $i => $val){
-                  $record['creators']['names'][] = isset($val['a']) ? $val['a'] : isset($val['e']) ? $val['e'] : (string) $val;
-                  $record['creators']['roles'][] = isset($val['j']) ? $val['j'] : isset($val['i']) ? $val['i'] : isset($val[4]) ? $val[4] : 'creator';
+                  $name = isset($val['a']) ? (string) $val['a'] : array_key_exists('e',$val) ? (string) $val['e'] : (string) $val;
+                  if(!empty($name)){
+                    $record['creators']['names'][] = $name;
+                    $record['creators']['roles'][] = isset($val['j']) ? (string) $val['j'] : array_key_exists('i', $val) ? (string) $val['i'] : array_key_exists(4, $val) ? (string) $val[4] : 'creator';
+                  }
                 } break;
               case '20':
                 foreach($info as $i => $val){
-                  $record['creators']['names'][] = isset($val['a']) ? $val['a'] : (string) $val;
-                  $record['creators']['roles'][] = isset($val['e']) ? $val['e'] : isset($val[4]) ? $val[4] : isset($val[6]) ? $val[6] : 'creator';
+                  $name = $record['creators']['names'][] = isset($val['a']) ? $val['a'] : (string) $val;
+                  if(!empty($name)){
+                    $record['creators']['names'][] = $name;
+                    $record['creators']['roles'][] = isset($val['e']) ? $val['e'] : array_key_exists(4, $val) ? $val[4] : array_key_exists(6,$val) ? $val[6] : 'creator';
+                  }
                 } break;
               default:
                 foreach($info as $i => $val){
-                  $record['creators']['names'][] = isset($val['b']) && strpos(strtolower($val['b']), 'great courses') !== FALSE ? "The Great Courses" : isset($val['b']) ? $val['b'] : (string) $val;
-                  $record['creators']['roles'][] = isset($val['e']) ? $val['e'] : isset($val[4]) ? $val[4] : isset($val[6]) ? $val[6] : 'production/distribution';
+                  $name = $record['creators']['names'][] = isset($val['b']) && strpos(strtolower($val['b']), 'great courses') !== FALSE ? "The Great Courses" : array_key_exists('b', $val) ? (string) $val['b'] : (string) $val;
+                  if(!empty($name)){
+                    $record['creators']['names'][] = $name;
+                    $record['creators']['roles'][] = isset($val['e']) ? (string) $val['e'] : array_key_exists(4, $val) ? (string) $val[4] : array_key_exists(6, $val) ? (string) $val[6] : 'production/distribution';
+                  }
                 }
             }
           }
-          if(in_array($key, $this->title_fields)){
+          if(in_array($field, $this->title_fields)){
             foreach($info as $k => $v){
-              $title = $this->getStringField($v, $key);
+              $title = $this->getStringField($v, $field);
               if(!empty($title)){
-                if(empty($record['titles'])){
-                  $catalog_item->set('title', $title);
+                if(empty($record['title']) && in_array($field, ['245', '130'])){
+                  $record['title'] = $title;
                 } else {
                   $record['titles'][]=$title;
                 }
               }
             }
           }
-          if(in_array($key,$this->audience_fields)){
+          if(in_array($field,$this->audience_fields)){
             $s = $this->getFieldArray($info, null, true);
             if(!empty($s)){
               $record['audience'] = array_merge($record['audience'], $s);
             }
           }
-          if(in_array($key,$this->subject_fields)){
+          if(in_array($field,$this->subject_fields)){
             $s = $this->getFieldArray($info, null, true);
             if(!empty($s)){
               $record['topics'] = array_merge($record['topics'], $s);
               $record['audience'] = array_merge($record['audience'], $s);
-              if($subject_field == 655){
+              if($field == 655){
                 $record['genre'] = $s;
               }
             }
@@ -246,18 +269,28 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
     //   'audience' => array(),
     //   'titles' => array(),
     // );
-    $catalog_item->set('alt_titles', $record['titles']);
-    $catalog_item->set('audience', $record['audience']);
-    $catalog_item->set('genre', $record['genre']);
-    $catalog_item->set('topics', $record['topics']);
+    $catalog_item->set('alt_titles', $record['titles'])
+      ->set('audience', $record['audience'])
+      ->set('genre', $record['genre'])
+      ->set('topics', $record['topics'])
+      ->set('creators', $record['creators']['names'])
+      ->set('roles', $record['creators']['roles'])
+      ->set('image', $record['cover'])
+      ->set('description', implode("<br/><br/>", array_filter($record['description'])));
+    if(empty($record['title'])){
+      $catalog_item->set('title', $record['titles'][0]);
+    } else {
+      $catalog_item->set('title', $record['title']);
+    }
+    
     // $catalog_item->set('type', $this->getItemKeywords($item, 'type'));
     // $catalog_item->set('form', $this->getItemKeywords($item, 'form'));
     // $catalog_item->set('classification', $this->getItemKeywords($item, 'ddc'));
-    $catalog_item->set('creators', $record['creators']['names']);
-    $catalog_item->set('roles', $record['creators']['roles']);
-    $catalog_item->set('image', $record['cover']);
-    $catalog_item->set('description', implode("<br/><br/>", array_filter($record['description'])));
+    
 
+    \Drupal::logger('catalog_importer')->notice('ITEM: <pre>@exclude</pre>', array(
+      '@exclude'  => print_r($catalog_item, TRUE),
+    )); 
     return $catalog_item;
   }
 
@@ -293,6 +326,9 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
   }
 
   private function getFieldArray($array, $separator = null, $strip_numeric = false){
+    \Drupal::logger('catalog_importer')->notice("getFieldArray $separator: <pre>@exclude</pre>", array(
+      '@exclude'  => print_r($array, TRUE),
+    )); 
     $field = array_merge(array(), $array);
     $value = array();
 
