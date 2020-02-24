@@ -253,22 +253,13 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
               $record['topics'] = array_merge($record['topics'], $s);
               $record['audience'] = array_merge($record['audience'], $s);
               if($field == 655){
-                $record['genre'] = $s;
+                $record['genre'] = array_merge($record['genre'], $s);
               }
             }
           }
       }
     }
-    // $record = array(
-    //   'creators' => array(), 
-    //   'description' => array(),
-    //   'urls' => '', // 856[0][u]
-    //   'cover' => '',
-    //   'topics' => array(), // 650
-    //   'genre' => array(), // 655
-    //   'audience' => array(),
-    //   'titles' => array(),
-    // );
+
     $catalog_item->set('alt_titles', $record['titles'])
       ->set('audience', $record['audience'])
       ->set('genre', $record['genre'])
