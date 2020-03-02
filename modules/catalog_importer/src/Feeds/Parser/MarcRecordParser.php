@@ -42,6 +42,39 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
   private $title_fields = array('245', '130', '210', '222', '240', '242', '243', '246', '247', '730', '740'); //'240', '246', '247', '440', '490', '500', '505', '700', '710', '711', '730', '740', '780', '800', '810', '811', '830', '840'
   private $subject_fields = array('600', '610', '611', '630', '648', '650', '651', '653', '654', '655', '656', '657', '658', '662', '690', '691', '692', '693', '694', '695', '696', '697', '698', '699');
   private $audience_fields = array('521','385');
+
+  private $form_codes = array(
+    'a' => 'map',
+    'c' =>'electronic resource',
+    'd' => 'globe',
+    'f' => 'tactile material',
+    'g' =>'projected graphic',
+    'h' => 'microform',
+    'k' => 'nonprojected graphic',
+    'm' => 'motion picture',
+    'o' => 'kit',
+    'q' => 'notated music',
+    'r' => 'remote-sensing image',
+    's' => 'sound recording',
+    't' => 'text',
+    'v' => 'videorecording',
+    'z' => 'unspecified'
+  );
+  private $resource_types = array(
+    'a' =>'text',
+    't' =>'text',
+    'e' =>'cartographic',
+    'f' =>'cartographic',
+    'c' =>'notated music',
+    'd' =>'notated music',
+    'i' =>'sound recording-nonmusical',
+    'j' =>'sound recording-musical',
+    'k' =>'still image',
+    'g' =>'moving image',
+    'r' =>'three dimensional object',
+    'm' =>'software, multimedia',
+    'p' =>'mixed material'
+  );
   /**
    * {@inheritdoc}
    */
@@ -134,35 +167,80 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
   private function mapMarcFields($marc_record){
     //dd($marc_record);
     $record = array(
-      'creators' => ['names'=>array(), 'roles'=>array()], 
-      'description' => array(),
-      'urls' => array(), // 856[0][u]
-      'cover' => '',
-      'topics' => array(), // 650
-      'genre' => array(), // 655
-      'audience' => array(),
-      'titles' => array(),
-      'title' => ''
+      'creators'        => [
+        'names'=>array(),
+        'roles'=>array()
+      ], 
+      'description'     => array(),
+      'urls'            => array(), // 856[0][u]
+      'cover'           => '',
+      'topics'          => array(), // 650
+      'genre'           => array(), // 655
+      'audience'        => array(),
+      'titles'          => array(),
+      'title'           => '',
+      'type'            => '',
+      'form'            => array(),
+      'classification'  => array(),
+      'identifier_ids' => array(),
+      'identifier_types'=> array(),
+      'isbn'            =>array(),
     );
     $catalog_item = new CatalogItem();
 
     foreach($marc_record as $field => &$info){
       switch($field){
+        case 'leader':
+          $type = substr($info, 6, 1);
+          if(isset($this->resource_types[$type])){
+            $catalog_item->set('type', $this->resource_types[$type]);
+          } break;
         case '001':
           $catalog_item->set('guid', (string) $info[0]);
           $catalog_item->set('tcn', (string) $info[0]); break;
         case '005': 
           $catalog_item->set('active_date', substr($info[0], 0, 8)); break;
+        case '007':
+          foreach($info as $v){
+            $form = substr($v, 0, 1);
+            if(isset($this->form_codes[$form])){
+              $record['form'][]=$this->form_codes[$form];
+            }
+          } break;
         case '008':
           $lang = substr($info[0], 30);
           $lang = trim($lang);
           if(substr($lang,2,3) !== 'eng' && substr($lang,2,3) !== 'und' && substr($lang,2,3) !== 'zxx'){        
             $record['genre'][] = 'foreign language';
           } break;
+        case '024':
+          foreach($info as $i => $v){
+            if(isset($v['i1'])){
+              // http://www.loc.gov/marc/bibliographic/bd024.html
+              switch($v['i1']){
+                case 0:
+                case 1:
+                case 2:
+                case 3:
+                case 4:
+                case 7:
+                default:
+              }
+
+            }
+
+          }
+
         case '028':
           if(strtolower($info[0]['b']) == 'kanopy'){
             $record['cover'] = 'https://www.kanopy.com/sites/default/files/imagecache/vp_poster_small/video-assets/' . $info[0]['a'] . '_poster.jpg'; break;
           }
+        case '082':
+          foreach($info as $classification){
+            if(isset($classification['a'])){
+              $record['classification'][] = $classification['a'];
+            }
+          } break;
         case '856':
           foreach($info as $url){
             if(empty($cover) && strpos($url['u'], '/external-image') !== FALSE){
@@ -177,9 +255,10 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
           array_unshift($record['description'], implode(';', $this->getFieldArray($info))); break;
         default:
           $k = ltrim($field, '0');
-          if($k >= 100 && $k !== 'leader' && ($k < 300 || $k >= 400) && !in_array($k, $this->subject_fields)){
+          if($k >= 100 && $field !== 'leader' && ($k < 300 || $k >= 400) && !in_array($k, $this->subject_fields)){
             $record['description'][] = implode("; ", $this->getFieldArray($info, " "));
           }
+         
           if(in_array($field, $this->author_fields)){
             // \Drupal::logger('catalog_importer')->notice("CREATOR- $field: <pre>@exclude</pre>", array(
             //   '@exclude'  => print_r($info, TRUE),
@@ -228,6 +307,8 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
       ->set('creators', $record['creators']['names'])
       ->set('roles', $roles)
       ->set('image', $record['cover'])
+      ->set('form', $record['form'])
+      ->set('classification', $record['classification'])
       ->set('description', implode("<br/><br/>", array_filter($record['description'])));
       //->set('roles', $record['creators']['roles'])
     if(empty($record['title'])){
@@ -235,11 +316,6 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
     } else {
       $catalog_item->set('title', $record['title']);
     }
-    
-    // $catalog_item->set('type', $this->getItemKeywords($item, 'type'));
-    // $catalog_item->set('form', $this->getItemKeywords($item, 'form'));
-    // $catalog_item->set('classification', $this->getItemKeywords($item, 'ddc'));
-    
 
     \Drupal::logger('catalog_importer')->notice('ITEM: <pre>@exclude</pre>', array(
       '@exclude'  => print_r($catalog_item, TRUE),
