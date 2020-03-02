@@ -218,7 +218,7 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
     }
 
     $roles = array_map(function($role_array){
-      return implode(",", $role_array);
+      return implode(", ", $role_array);
     }, $record['creators']['roles']);
 
     $catalog_item->set('alt_titles', $record['titles'])
@@ -246,105 +246,100 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
     )); 
     return $catalog_item;
   }
+  /**
+   * Function to retrieve the creator fields from a record
+   */
   private function getCreators($field, $info, &$creators){
     $k = substr($field, -2);
-    // \Drupal::logger('catalog_importer')->notice("CREATOR ARRAY- $k: <pre>@value</pre><br/><hr><br> <pre>@exclude</pre>", array(
-    //   '@value'  => print_r($info, TRUE),
-    //   '@exclude'  => print_r($creators, TRUE),
-    // )); 
-    foreach($info as $i => $val){
-      \Drupal::logger('catalog_importer')->notice("CREATOR VAL $field  / $k -: <pre>@value</pre>", array(
-        '@value'  => print_r($val, TRUE),
-      )); 
-      if(is_array($val)){
-        \Drupal::logger('catalog_importer')->notice("VAL IS ARRAY"); 
-      }
-      if(isset($val['a'])){
-        \Drupal::logger('catalog_importer')->notice("VAL[A] IS SET"); 
-      }
-      $name = '';
-      switch($k){
-        case '10':
-          $name = isset($val['a']) ? $val['a'] : isset($val['b']) ? $val['b'] : (string) $val; break;
-        case '11':
-          $name = isset($val['a']) ? $val['a'] : isset($val['e']) ? $val['e'] : (string) $val; break;
-        case '20':
-          $name = isset($val['a']) ? $val['a'] : (string) $val; break;
-        case '64':
-          $name = isset($val['b']) && strpos(strtolower($val['b']), 'great courses') !== FALSE ? "The Great Courses" : isset($val['b']) ? $val['b']: (string) $val; break;
-        default:
-          $name = isset($val['a']) ? $val['a'] : isset($val['q']) ? $val['q'] : isset($val['b']) ? $val['b'] : (string) $val;
-      }
-      
-      $name = trim($name, ",;.: ");
 
-      //GET THE ROLES
+    foreach($info as $i => $val){
+      $name = '';
+      $roles = array();
+      foreach($val as $indicator => $v){
+        switch($k){
+          case '10':
+            if($indicator == 'a'){
+              $name = $v; break;
+            }
+            if($indicator == 'b' && empty($name)){
+              $name = $v; break;
+            }
+            if(in_array($indicator, [4, 'e'])){
+              $roles[]=trim($v, ",;.: "); break;
+            } break;
+          case '11':
+            if($indicator == 'a'){
+              $name = $v; break;
+            }
+            if($indicator == 'e' && empty($name)){
+              $name = $v; break;
+            }
+            if(in_array($indicator, [4, 'j', 'i'])){
+              $roles[]=trim($v, ",;.: "); break;
+            } break;
+          case '20':
+            if($indicator == 'a'){
+              $name = $v; break;
+            }
+            if($indicator == 'e' && empty($name)){
+              $name = $v; break;
+            }
+            if(in_array($indicator, [4, 'b', 'e', 'c', 6])){
+              $roles[]= trim($v, ",;.: "); break;
+            } break;
+          case '64':
+            if($indicator == 'b'){
+              if(strpos(strtolower($val['b']), 'great courses') !== FALSE){
+                $name ="The Great Courses"; break;
+              } else {
+                $name = $v; break;
+              }
+            }
+            if(in_array($indicator, [4, 'e', 6])){
+              $roles[]=trim($v, ",;.: "); break;
+            } break;
+          default:
+            if($indicator == 'a'){
+              $name = $v; break;
+            }
+            if($indicator == 'q' && empty($name)){
+              $name = $v; break;
+            }
+            if(in_array($indicator, ['b', 'e','c', 4, 6])){
+              $roles[]=trim($v, ",;.: ");
+            }
+        }
+      }
+
+      $name = trim(preg_replace('/\(.*\)/',"",$name),"= / . : , ; ");
+      $name = implode(", ", array_map(function($n){
+        return preg_replace('/^[\pZ\pC]+|[\pZ\pC]+$/u','',$n);
+      }, explode(",", $name)));
+
+      $roles = array_unique(array_map('strtolower', $roles));
+
       if(!empty($name)){
+        if(empty($roles)){
+          $roles = $k == 64 ? ['prod/dst'] : ['creator'];
+        }
         if(!in_array($name, $creators['names'])){
+          if($k == '00'){
+            array_unshift($creators['names'], $name);
+            array_unshift($creators['roles'], $roles);
+          } else {
           $creators['names'][] = $name;
-          $roles = array();
+          $creators['roles'][] = $roles;
+          }
         } else {
           $key = array_search($name, $creators['names']);
-          $roles = $creators['roles'][$key];
-        }
-        foreach($val as $subfield => $value){
-          switch($k){
-            case '10': 
-              if(in_array($subfield, [4, 'e'])){
-                $role = explode(",", $value);
-                foreach($role as &$r){
-                  $r = trim($r, ",;.: ");
-                  if(!in_array($r, $roles)){
-                    $roles[] = $r;
-                  }
-                }
-              } break;
-            case '11': 
-              if(in_array($subfield, [4, 'j', 'i'])){
-                $role = explode(",", $value);
-                foreach($role as &$r){
-                  $r = trim($r, ",;.: ");
-                  if(!in_array($r, $roles)){
-                    $roles[] = $r;
-                  }
-                }
-              } break;
-            case '64': 
-              if(in_array($subfield, [4, 'e', 6])){
-                $role = explode(",", $value);
-                foreach($role as &$r){
-                  $r = trim($r, ",;.: ");
-                  if(!in_array($r, $roles)){
-                    $roles[] = $r;
-                  }
-                }
-              }
-            default:
-              if(in_array($subfield, ['b', 'e','c', 4, 6])){
-                $role = explode(",", $value);
-                foreach($role as &$r){
-                  $r = trim($r, ",;.: ");
-                  if(!in_array($r, $roles)){
-                    $roles[] = $r;
-                  }
-                }
-              } break;
+          foreach($roles as $r){
+            if(!in_array($r, $creators['roles'][$key])){
+              $creators['roles'][$key][]=$r;
+            }
           }
-        }
-        if(!empty($roles)){
-          if(isset($key)){
-            $creators['roles'][$key] = $roles;
-          } else {
-            $creators['roles'][] = $roles;
-          }
-        } else {
-          $creators['roles'][] = ['creator'];
         }
       }
     }
-    \Drupal::logger('catalog_importer')->notice("CREATOR ARRAY AFTER: <pre>@exclude</pre>", array(
-      '@exclude'  => print_r($creators, TRUE),
-    )); 
     return $creators;
   }
 
@@ -382,9 +377,6 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
   }
 
   private function getFieldArray($array, $separator = null, $strip_numeric = false){
-    // \Drupal::logger('catalog_importer')->notice("getFieldArray $separator: <pre>@exclude</pre>", array(
-    //   '@exclude'  => print_r($array, TRUE),
-    // )); 
     $field = array_merge(array(), $array);
     $value = array();
 
