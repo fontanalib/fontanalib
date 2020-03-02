@@ -339,9 +339,11 @@ class EvergreenCatalogProcessor extends EntityProcessorBase {
     //   return;
     // }
 
-    $fc = $feed->get('field_import_featured_collection')->getValue();
-    $entity_ids = array($entity->id());
-    $this->removeFeaturedCollections($entity_ids, $fc);
+    if($feed->hasField('field_import_featured_collection')){
+      $fc = $feed->get('field_import_featured_collection')->getValue();
+      $entity_ids = array($entity->id());
+      $this->removeFeaturedCollections($entity_ids, $fc);
+    }
   
 
     // State progress.
@@ -375,8 +377,10 @@ class EvergreenCatalogProcessor extends EntityProcessorBase {
     // Resource items aren't actually deleted, but removed from bookbag
     // and references to importer & featured collection are cleaned
     if ($entity_ids) {
-      $fc = $feed->get('field_import_featured_collection')->getValue();
-      $this->removeFeaturedCollections($entity_ids, $fc);
+      if($feed->hasField('field_import_featured_collection')){
+        $fc = $feed->get('field_import_featured_collection')->getValue();
+        $this->removeFeaturedCollections($entity_ids, $fc);
+      }
       $state->deleted += count($entity_ids);
       $state->progress($state->total, $state->deleted);
     }
