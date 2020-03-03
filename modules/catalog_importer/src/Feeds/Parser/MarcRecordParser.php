@@ -394,19 +394,30 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
     $f007 = isset($marc_record['007']) && !is_array($marc_record['007']) ? array(str_split($marc_record['007'])) : isset($marc_recotd['007']) ? array_map(function($f){
       return str_split($f);
     }, $marc_record['007']) : null;
-    $f008 = isset($marc_record['008']) && !is_array($marc_record['008']) ? array(str_split($marc_record['008'])) : isset($marc_recotd['008']) ? array_map(function($f){
+    $f008 = isset($marc_record['008']) && !is_array($marc_record['008']) ? array(str_split($marc_record['008'])) : isset($marc_record['008']) ? array_map(function($f){
       return str_split($f);
     }, $marc_record['008']) : null;
+            // $f008 = null;
+            // if(isset($marc_record['008'])){
+            //   $f008 = array();
+            //   if(!is_array($marc_record['008'])){
+            //     $f008[] = str_split($marc_record['008']); 
+            //   } else{
+            //     foreach($marc_recotd['008'] as $i => )array_map(function($f){
+            //       return str_split($f);
+            //     }, $marc_record['008']) :)
+            //   }
 
     if($leader){
       if(isset($this->resource_types[$leader[6]])){
-      $catalog_item->set('type', $this->resource_types[$leader[6]]);
+        $catalog_item->set('type', $this->resource_types[$leader[6]]);
+        $record['form'][] = $this->resource_types[$leader[6]];
       }
-      if($leader[6] == 'a'){
-        if (in_array($leader[7], array('b', 'i', 's'))) {
+      if($leader[6] === 'a'){
+        if (in_array((string) $leader[7], array('b', 'i', 's'))) {
           $record['form'][] = 'series';
         }
-        if (in_array($leader[7], array('a', 'c', 'd', 'm'))) {
+        if (in_array((string) $leader[7], array('a', 'c', 'd', 'm'))) {
           $record['form'][] = 'book';
         }
       }
@@ -426,8 +437,15 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
       }
     }
     if($f008){
-      $catalog_item->set('active_date', substr($marc_record['008'][0], 0, 6));
-      $lang = substr($marc_record['008'][0], 35, 3); 
+      $date = array_slice($f008[0], 0, 6);
+      /**
+       * TO FIX : active date - change to 005 ? or date1 in 008 ?
+       */
+      $catalog_item->set('active_date', implode("", $date));
+      $lang = implode("", array_slice($f008[0], 35, 3));//substr($marc_record['008'][0], 35, 3); 
+      \Drupal::logger('catalog_importer')->notice("LANG- $lang: <pre>@exclude</pre>", array(
+              '@exclude'  => print_r($f008, TRUE),
+            )); 
       if($lang !== 'eng' && $lang !== 'und' && $lang !== 'zxx'){
         $record['genre'][] = 'foreign language';
       } 
@@ -437,7 +455,7 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
           case 'n': $record['form'][]='newspaper'; break;
           case 'p': $record['form'][]='periodical'; break;
         }
-        if($leader[7] == 'a'){
+        if($leader[7] === 'a'){
           $record['form'][] = 'article';
         }
       } elseif (in_array('text', $record['form'])) {
@@ -445,14 +463,15 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
             // Slight simplification
             $record['form'][] = $this->textContent[$f008[0][24]];
         }
-        if ($leader[7] == 'a') {
+        if ($leader[7] === 'a') {
             $material = 'Article';
             $record['form'][] = 'article';
         }
       }
     }
     foreach($marc_record as $field => &$info){
-      switch($field){
+      $field_str = strval($field);
+      switch($field_str){
         case 'leader': break;
         case '001':
           $catalog_item->set('guid', (string) $info[0]);
@@ -467,18 +486,34 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
         case '024':
         // case '040': 
         case '060':
-          $type = $field == '010' ? 'lccn' : $field == '020' ? 'isbn' : $field == '022' ? 'issn' : $field == '060' ? 'nlm' : 'other';
+          // $f = intval(ltrim($field_str, '0'));
+          // $t = gettype($f);
+          // \Drupal::logger('catalog_importer')->notice("field: $f <pre>@exclude</pre>", array(
+          //     '@exclude'  => print_r($t, TRUE),
+          //   )); 
+          // $type = $f === 10 ? 'lccn' : $f === 20 ? 'isbn' : $f === 22 ? 'issn' : $f === 60 ? 'nlm' : 'other';
+          $type;
+          switch($field_str){
+            case '010': $type = 'lccn'; break;
+            case '020': $type = 'isbn'; break;
+            case '022': $type = 'issn'; break;
+            case '060': $type = 'nlm'; break;
+            default: $type = 'other';
+          }
           foreach($info as $i => $v){
-            if(isset($v['a'])){
+            if(isset($v['a']) && !empty($v['a'])){
               $record['identifier_ids'][] = $v['a'];
               $record['identifier_types'][] = $type;
-              if($type == 'isbn'){
-                $record['isbn'][] = preg_replace('/^([0-9\-xX]+).*$/', '\1', $v['a']);
+              if($type === 'isbn'){
+                $isbn = preg_replace('/^([0-9\-xX]+).*$/', '\1', $v['a']);
+                if(!empty($isbn)){
+                  $record['isbn'][] = $isbn;
+                }
               }
             }
           } break;
         case '028':
-          if(strtolower($info[0]['b']) == 'kanopy'){
+          if(strtolower($info[0]['b']) === 'kanopy'){
             $record['cover'] = 'https://www.kanopy.com/sites/default/files/imagecache/vp_poster_small/video-assets/' . $info[0]['a'] . '_poster.jpg'; break;
           }
         case '080':
@@ -486,6 +521,10 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
           foreach($info as $classification){
             if(isset($classification['a'])){
               $record['classification'][] = preg_replace('/^.*?([0-9.]+)\/?([0-9.]*).*$/', '\1\2', $classification['a']);
+              $dewey_keywords = $this->keywordsFromClassification($classification['a']);
+              $record['topics'][] = $dewey_keywords;
+              $record['audience'][] = $dewey_keywords;
+              $record['genre'][] = $dewey_keywords;
             }
           } break;
         case '856':
@@ -501,40 +540,40 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
           //$record['description'][] = $this->getFieldArray($info); break;
           array_unshift($record['description'], implode(';', $this->getFieldArray($info))); break;
         default:
-          $k = ltrim($field, '0');
+          $k = intval(ltrim($field_str, '0'));
           if($k >= 100 && $field !== 'leader' && ($k < 300 || $k >= 400) && !in_array($k, $this->subject_fields)){
             $record['description'][] = implode("; ", $this->getFieldArray($info, " "));
           }
          
-          if(in_array($field, $this->author_fields)){
+          if(in_array($field_str, $this->author_fields)){
             // \Drupal::logger('catalog_importer')->notice("CREATOR- $field: <pre>@exclude</pre>", array(
             //   '@exclude'  => print_r($info, TRUE),
             // )); 
             $record['creators'] = $this->getCreators($field, $info, $record['creators']);
           }
-          if(in_array($field, $this->title_fields)){
-            foreach($info as $k => $v){
-              $title = $this->getStringField($v, $field);
+          if(in_array($field_str, $this->title_fields)){
+            foreach($info as $i => $v){
+              $title = $this->getStringField($v, $field_str);
               if(!empty($title)){
-                if(empty($record['title']) && in_array($field, ['245', '130'])){
+                if(empty($record['title']) && in_array($field_str, ['245', '130'])){
                   $record['title'] = $name = trim(preg_replace('/\[.*\]/',"", $title),"= / . : , ; ");
                 }
                 $record['titles'][]=$title;
               }
             }
           }
-          if(in_array($field,$this->audience_fields)){
+          if(in_array($field_str,$this->audience_fields)){
             $s = $this->getFieldArray($info, null, true);
             if(!empty($s)){
               $record['audience'] = array_merge($record['audience'], $s);
             }
           }
-          if(in_array($field,$this->subject_fields)){
+          if(in_array($field_str,$this->subject_fields)){
             $s = $this->getFieldArray($info, null, true);
             if(!empty($s)){
               $record['topics'] = array_merge($record['topics'], $s);
               $record['audience'] = array_merge($record['audience'], $s);
-              if($field == 655){ //|| $field == 653
+              if($field_str === '655'){ //|| $field == 653
                 $record['genre'] = array_merge($record['genre'], $s);
               }
             }
@@ -542,15 +581,18 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
       }
     }
 
-    $roles = array_map(function($role_array){
+    $roles = !empty($record['creators']['roles']) ? array_map(function($role_array){
       return implode(", ", $role_array);
-    }, $record['creators']['roles']);
+    }, $record['creators']['roles']) : array();
 
     $catalog_item->set('alt_titles', $record['titles'])
+      ->set('identifier_types', $record['identifier_types'])
+      ->set('identifier_ids', $record['identifier_ids'])
+      ->set('isbn', $record['isbn'])
       ->set('audience', $record['audience'])
       ->set('genre', $record['genre'])
       ->set('topics', $record['topics'])
-      ->set('creators', $record['creators']['names'])
+      ->set('item_creators', $record['creators']['names'])
       ->set('roles', $roles)
       ->set('image', $record['cover'])
       ->set('form', $record['form'])
@@ -572,62 +614,63 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
    * Function to retrieve the creator fields from a record
    */
   private function getCreators($field, $info, &$creators){
-    $k = substr($field, -2);
+    $k = (string) substr($field, -2);
 
     foreach($info as $i => $val){
       $name = '';
       $roles = array();
       foreach($val as $indicator => $v){
+        $indicator = strval($indicator);
         switch($k){
           case '10':
-            if($indicator == 'a'){
+            if($indicator === 'a'){
               $name = $v; break;
             }
-            if($indicator == 'b' && empty($name)){
+            if($indicator === 'b' && empty($name)){
               $name = $v; break;
             }
-            if(in_array($indicator, [4, 'e'])){
+            if($indicator === '4' || $indicator === 'e'){
               $roles[]=trim($v, ",;.: "); break;
             } break;
           case '11':
-            if($indicator == 'a'){
+            if($indicator === 'a'){
               $name = $v; break;
             }
-            if($indicator == 'e' && empty($name)){
+            if($indicator === 'e' && empty($name)){
               $name = $v; break;
             }
-            if(in_array($indicator, [4, 'j', 'i'])){
+            if($indicator === '4' || $indicator === 'j' || $indicator === 'i'){
               $roles[]=trim($v, ",;.: "); break;
             } break;
           case '20':
-            if($indicator == 'a'){
+            if($indicator === 'a'){
               $name = $v; break;
             }
-            if($indicator == 'e' && empty($name)){
+            if($indicator === 'e' && empty($name)){
               $name = $v; break;
             }
-            if(in_array($indicator, [4, 'b', 'e', 'c', 6])){
+            if($indicator === '4' || $indicator === 'b' || $indicator === 'e' || $indicator === 'c' || $indicator === '6'){
               $roles[]= trim($v, ",;.: "); break;
             } break;
           case '64':
-            if($indicator == 'b'){
+            if($indicator === 'b'){
               if(strpos(strtolower($val['b']), 'great courses') !== FALSE){
                 $name ="The Great Courses"; break;
-              } else {
+              } elseif(empty($name)) {
                 $name = $v; break;
               }
             }
-            if(in_array($indicator, [4, 'e', 6])){
+            if($indicator === '4' || $indicator === 'e' || $indicator === '6'){
               $roles[]=trim($v, ",;.: "); break;
             } break;
           default:
-            if($indicator == 'a'){
+            if($indicator === 'a'){
               $name = $v; break;
             }
-            if($indicator == 'q' && empty($name)){
+            if($indicator === 'q' && empty($name)){
               $name = $v; break;
             }
-            if(in_array($indicator, ['b', 'e','c', 4, 6])){
+            if($indicator === 'b' || $indicator === 'e' || $indicator ==='c' || $indicator === '4' || $indicator === '6'){
               $roles[]=trim($v, ",;.: ");
             }
         }
@@ -642,10 +685,10 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
 
       if(!empty($name)){
         if(empty($roles)){
-          $roles = $k == 64 ? ['prod/dst'] : ['creator'];
+          $roles = $k === '64' ? ['prod/dst'] : ['creator'];
         }
         if(!in_array($name, $creators['names'])){
-          if($k == '00'){
+          if($k === '00'){
             array_unshift($creators['names'], $name);
             array_unshift($creators['roles'], $roles);
           } else {
@@ -666,7 +709,6 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
   }
 
   private function getStringField($array, $field_number, $separator = " ", $subfield=NULL){
-    $field_number = strval($field_number);
     $field = array_merge(array(), $array);
     if(empty($field)){
       return null;
@@ -685,13 +727,13 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
 
     if($subfield){
       $value = (string) $field[$subfield];
-    } elseif($field_number == 700){
+    } elseif($field_number === '700'){
       $value = $field['a'];
-    } elseif($field_number == 710){
+    } elseif($field_number === '710'){
       $value = isset($field['a']) ? $field['a'] : implode($separator, $field);
-    } elseif($field_number == 264){
+    } elseif($field_number === '264'){
       $value = isset($field['b']) ? $field['b']: implode($separator, $field);
-    } elseif($field_number == 245){
+    } elseif($field_number === '245'){
       $value = isset($field['a']) ? $field['a'] : implode($separator, $field);
     } else{
       $value = implode($separator, $field);
@@ -736,6 +778,45 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
       }
     }
     return $value;
+  }
+  public function keywordsFromClassification($classification, $dewey = NULL){
+    if($dewey && is_numeric($dewey) &&  $dewey > 0 && $dewey < 1000){
+      $dNum = $dewey;
+      $dText = '';
+    } else{
+      $dNum = preg_replace('/[^ .0-9]/', '', $classification);
+      $dNum = trim($dNum, ". ");
+      $dNum = floatval($dNum);
+      $dText = preg_replace('/[\d\/\\.\[\]]/', ' ', $classification);
+      $dText = strtolower(trim($dText));
+    }
+    if ($dNum > 0) {
+      if ($dNum < 742 && $dNum > 739){
+        return "graphic novel";
+      } elseif (($dNum >= 800 && $dNum <= 899)) { 
+        return "fiction";
+      } elseif (($dNum >= 791 && $dNum < 793)) {
+        return "video";
+      } elseif(($dNum > 919 && $dNum < 921) || ($dNum > 758 && $dNum < 760) || ($dNum > 708 && $dNum < 710) || ($dNum > 608 && $dNum < 610) || ($dNum > 508 && $dNum < 510) || ($dNum > 408 && $dNum < 410) || ($dNum > 269 && $dNum < 271) || ($dNum > 108 && $dNum < 110)){
+        return 'biography';
+      } elseif( ($dNum > 810 && $dNum < 812) || ($dNum > 820 && $dNum < 822) || ($dNum > 830 && $dNum < 832) || ($dNum > 840 && $dNum < 842) || ($dNum > 850 && $dNum < 852) || ($dNum > 860 && $dNum < 862) || ($dNum > 870 && $dNum < 875)  || ($dNum > 880 && $dNum < 885)){
+        return 'poetry';
+      } elseif (($dNum >= 780 && $dNum < 788)) {
+        return "music";
+      } elseif(($dNum < 770 || $dNum >= 900) && $dNum < 1000){
+        return 'nonfiction';
+      }
+    } elseif ($dText == "b" || strpos($dText, 'biography') !== FALSE) {
+        return "biography";
+    } elseif ($dText== "e" || strpos($dText, 'easy') !== FALSE || strpos($dText, 'picture book') !== FALSE) {
+        return "easy";
+    } elseif(substr($dText,0,3) === 'cd ' || strpos($dText, 'music') !== FALSE) {
+        return "music";
+    } elseif ((substr($dText,0,3) === 'fic' || strpos($dText, 'fiction') !== FALSE) && (strpos($dText, 'film') === FALSE || strpos($dText, 'video') === FALSE || strpos($dText, 'television') === FALSE)){
+        return "fiction";
+    }
+    return $dText;
+
   }
   /**
    * {@inheritdoc}
