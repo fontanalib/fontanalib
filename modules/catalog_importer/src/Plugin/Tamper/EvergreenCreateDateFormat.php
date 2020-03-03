@@ -28,9 +28,9 @@ class EvergreenCreateDateFormat extends TamperBase {
     if($data == '000000'){
       return date('Y-m-d H:i:s', strtotime('1970-01-01'));
     }
-    $year = strlen($data) ===8 ? substr($data, 0, 4) : substr($data, 0, 2);
-    $month = strlen($data) ===8 ? substr($data, 4, 2) : substr($data, 2, 2);
-    $day = strlen($data) ===8 ? substr($data, 6, 2) : substr($data, 4, 2);
+    $year = strlen($data) === 8 ? substr($data, 0, 4) : substr($data, 0, 2);
+    $month = strlen($data) === 8 ? substr($data, 4, 2) : substr($data, 2, 2);
+    $day = strlen($data) === 8 ? substr($data, 6, 2) : substr($data, 4, 2);
     if(strlen($year) <3){
       if(intval($year) > 35){
         $year = '19' . $year;
