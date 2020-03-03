@@ -44,37 +44,236 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
   private $audience_fields = array('521','385');
 
   private $form_codes = array(
-    'a' => 'map',
-    'c' =>'electronic resource',
-    'd' => 'globe',
-    'f' => 'tactile material',
-    'g' =>'projected graphic',
-    'h' => 'microform',
-    'k' => 'nonprojected graphic',
-    'm' => 'motion picture',
-    'o' => 'kit',
-    'q' => 'notated music',
-    'r' => 'remote-sensing image',
-    's' => 'sound recording',
-    't' => 'text',
-    'v' => 'videorecording',
-    'z' => 'unspecified'
+    'a' => array(
+      'type' => 'map',
+      'mat_code'  => 1,
+      'd' => 'Atlas',
+      'g' => 'Diagram',
+      'j' => 'Map',
+      'k' => 'Profile',
+      'q' => 'Model',
+      'r' => 'Remote-sensing image',
+      's' => 'Section',
+      'u' => 'Unspecified',
+      'y' => 'View',
+      'z' => 'Other',
+    ),
+    'c' => array(
+      'type' => 'electronic resource',
+      'mat_code'  => 1,
+      'a' => 'Tape cartridge',
+      'b' => 'Chip cartridge',
+      'c' => 'Computer optical disc cartridge',
+      'd' => 'Computer disc, type unspecified',
+      'e' => 'Computer disc cartridge, type unspecified',
+      'f' => 'Tape cassette',
+      'h' => 'Tape reel',
+      'j' => 'Magnetic disk',
+      'k' => 'Computer card',
+      'm' => 'Magneto-optical disc',
+      'o' => 'Optical disc',
+      'r' => 'Remote',
+      's' => 'Standalone device',
+      'u' => 'Unspecified',
+      'z' => 'Other',
+    ),
+    'd' => array(
+      'type' => 'globe',
+      'mat_code'  => 1,
+      'a' => 'Celestial globe',
+      'b' => 'Planetary or lunar globe',
+      'c' => 'Terrestrial globe',
+      'e' => 'Earth moon globe',
+      'u' => 'Unspecified',
+      'z' => 'Other',
+    ),
+    'f' => array(
+      'type' => 'tactile material',
+      'mat_code'  => 1,
+      'a' => 'Moon',
+      'b' => 'Braille',
+      'c' => 'Combination',
+      'd' => 'Tactile, with no writing system',
+      'u' => 'Unspecified',
+      'z' => 'Other',
+    ),
+    'g' => array(
+      'type' => 'projected graphic',
+      'mat_code'  => 1,
+      'c' => 'Filmstrip cartridge',
+      'd' => 'Filmslip',
+      'f' => 'Filmstrip, type unspecified',
+      'o' => 'Filmstrip roll',
+      's' => 'Slide',
+      't' => 'Transparency',
+      'u' => 'Unspecified',
+      'z' => 'Other',
+    ),
+    'h' => array(
+      'type' => 'microform',
+      'mat_code'  => 1,
+      'a' => 'Aperture card',
+      'b' => 'Microfilm cartridge',
+      'c' => 'Microfilm cassette',
+      'd' => 'Microfilm reel',
+      'e' => 'Microfiche',
+      'f' => 'Microfiche cassette',
+      'g' => 'Microopaque',
+      'h' => 'Microfilm slip',
+      'j' => 'Microfilm roll',
+      'u' => 'Unspecified',
+      'z' => 'Other',
+    ),
+    'k' => array(
+      'type' => 'nonprojected graphic',
+      'mat_code'  => 1,
+      'a' => 'Activity card',
+      'c' => 'Collage',
+      'd' => 'Drawing',
+      'e' => 'Painting',
+      'f' => 'Photomechanical print',
+      'g' => 'Photonegative',
+      'h' => 'Photoprint',
+      'i' => 'Picture',
+      'j' => 'Print',
+      'k' => 'Poster',
+      'l' => 'Technical drawing',
+      'n' => 'Chart',
+      'o' => 'Flash card',
+      'p' => 'Postcard',
+      'q' => 'Icon',
+      'r' => 'Radiograph',
+      's' => 'Study print',
+      'u' => 'Unspecified',
+      'v' => 'Photograph, type unspecified',
+      'z' => 'Other',
+    ),
+    'm' => array(
+      'type' => 'motion picture',
+      'mat_code'  => 1,
+      'c' => 'Film cartridge',
+      'f' => 'Film cassette',
+      'o' => 'Film roll',
+      'r' => 'Film reel',
+      'u' => 'Unspecified',
+      'z' => 'Other'
+    ),
+    'o' => array(
+      'type' => 'kit',
+      'mat_code'  => null,
+    ),
+    'q' => array(
+      'type' => 'notated music',
+      'mat_code'  => null,
+    ),
+    'r' => array(
+      'type' => 'remote-sensing image',
+      'mat_code'  => null,
+    ),
+    's' => array(
+      'type' => 'sound recording',
+      'mat_code'  => 1,
+      'b' => 'Belt',
+      'd' => 'Sound disc',
+      'e' => 'Cylinder',
+      'g' => 'Sound cartridge',
+      'i' => 'Sound-track film',
+      'q' => 'Roll',
+      'r' => 'Remote',
+      's' => 'Sound cassette',
+      't' => 'Sound-tape reel',
+      'u' => 'Unspecified',
+      'w' => 'Wire recording',
+      'z' => 'Other'
+    ),
+    't' => array(
+      'type' => 'text',
+      'mat_code'  => 1,
+      // 'a' => 'Regular Print',
+      'b' => 'Large Print',
+      'c' => 'Braille',
+      'd' => 'Loose Leaf',
+      // 'u' => 'Unsepcified',
+      // 'z' => 'Other'
+    ),
+    'v' => array(
+      'type' => 'videorecording',
+      'mat_code'  => 4,
+      'a' => 'Beta (1/2 in., videocassette)',
+      'b' => 'VHS (1/2 in., videocassette)',
+      'c' => 'U-matic (3/4 in., videocasstte)',
+      'd' => 'EIAJ (1/2 in., reel)',
+      'e' => 'Type C (1 in., reel)',
+      'f' => 'Quadruplex (1 in. or 2 in., reel)',
+      'g' => 'Laserdisc',
+      'h' => 'CED (Capacitance Electronic Disc) videodisc',
+      'i' => 'Betacam (1/2 in., videocassette)',
+      'j' => 'Betacam SP (1/2 in., videocassette)',
+      'k' => 'Super-VHS (1/2 in., videocassette)',
+      'm' => 'M-II (1/2 in., videocassette)',
+      'o' => 'D-2 (3/4 in., videocassette)',
+      'p' => '8 mm.',
+      'q' => 'Hi-8 mm.',
+      's' => 'Blu-ray',
+      // 'u' => 'Uknown',
+      'v' => 'DVD',
+      // 'z' => 'Other'
+    ),//'videorecording',
+    'z' => array(
+      'type' => 'unspecified',
+      'mat_code'  => 1,
+      'm' => 'Multiple Physical Forms',
+      'u' => 'Unspecified',
+      'z' => 'Other'
+    ),
   );
   private $resource_types = array(
     'a' =>'text',
-    't' =>'text',
-    'e' =>'cartographic',
-    'f' =>'cartographic',
     'c' =>'notated music',
     'd' =>'notated music',
+    'e' =>'cartographic',
+    'f' =>'cartographic',
+    'g' =>'moving image',
     'i' =>'sound recording-nonmusical',
     'j' =>'sound recording-musical',
     'k' =>'still image',
-    'g' =>'moving image',
-    'r' =>'three dimensional object',
     'm' =>'software, multimedia',
-    'p' =>'mixed material'
+    'o' => 'kit',
+    'p' =>'mixed material',
+    'r' =>'three dimensional object',
+    't' =>'text',
   );
+  // 008/24-27 - Nature of contents (006/07-10)
+  private $textContent = array(
+    'a' => 'Abstract',
+    'b' => 'Bibliography',
+    'c' => 'Catalog',
+    'd' => 'Dictionary',
+    'e' => 'Encyclopedia',
+    'f' => 'Handbook',
+    'g' => 'Legal article',
+    'i' => 'Index',
+    'j' => 'Patent document',
+    'k' => 'Discography',
+    'l' => 'Legislation',
+    'm' => 'Thesis',
+    'n' => 'Surveys of literature in a subject area',
+    'o' => 'Review',
+    'p' => 'Programmed text',
+    'q' => 'Filmography',
+    'r' => 'Directory',
+    's' => 'Statistics',
+    't' => 'Technical report',
+    'u' => 'Standards/specification',
+    'v' => 'Legal cases and case notes',
+    'w' => 'Law reports and digests',
+    'y' => 'Yearbook',
+    'z' => 'Treaty',
+    '2' => 'Offprint',
+    '5' => 'Calendar',
+    '6' => 'Comics/graphic novel',
+);
+
   /**
    * {@inheritdoc}
    */
@@ -144,6 +343,10 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
         $record[$field_number][$field_count] = $field_value;
       }
       else {
+        //Populate Indicators
+        //$record[$field_number][$field_count]['field'] = $field_value;
+        $record[$field_number][$field_count]['i1'] = substr($field_value, 0, 1);
+        $record[$field_number][$field_count]['i2'] = substr($field_value, 1, 1); 
         //Start work on subfields
         // US (char) 31(dec) 1F 037 - character used to seperate subfields
         $subfields = explode($this->subfield_indicator, $marc_field_values[$key]);
@@ -187,58 +390,102 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
       'isbn'            =>array(),
     );
     $catalog_item = new CatalogItem();
+    $leader = isset($marc_record['leader']) ? str_split($marc_record['leader']) : null;
+    $f007 = isset($marc_record['007']) && !is_array($marc_record['007']) ? array(str_split($marc_record['007'])) : isset($marc_recotd['007']) ? array_map(function($f){
+      return str_split($f);
+    }, $marc_record['007']) : null;
+    $f008 = isset($marc_record['008']) && !is_array($marc_record['008']) ? array(str_split($marc_record['008'])) : isset($marc_recotd['008']) ? array_map(function($f){
+      return str_split($f);
+    }, $marc_record['008']) : null;
 
+    if($leader){
+      if(isset($this->resource_types[$leader[6]])){
+      $catalog_item->set('type', $this->resource_types[$leader[6]]);
+      }
+      if($leader[6] == 'a'){
+        if (in_array($leader[7], array('b', 'i', 's'))) {
+          $record['form'][] = 'series';
+        }
+        if (in_array($leader[7], array('a', 'c', 'd', 'm'))) {
+          $record['form'][] = 'book';
+        }
+      }
+    }
+
+    if($f007){
+      foreach($f007 as $v){
+        if(isset($this->form_codes[$v[0]])){
+          $record['form'][]=$this->form_codes[$v[0]]['type'];
+          if($this->form_codes[$v[0]]['mat_code']){
+            $format = $v[$this->form_codes[$v[0]]['mat_code']];
+            if(isset($this->form_codes[$v[0]][$format])){
+              $record['form'][]=$this->form_codes[$v[0]][$format];
+            }
+          }
+        }
+      }
+    }
+    if($f008){
+      $catalog_item->set('active_date', substr($marc_record['008'][0], 0, 6));
+      $lang = substr($marc_record['008'][0], 35, 3); 
+      if($lang !== 'eng' && $lang !== 'und' && $lang !== 'zxx'){
+        $record['genre'][] = 'foreign language';
+      } 
+      if(in_array('series', $record['form'])){
+        switch($f008[21]){
+          case 'm': break;
+          case 'n': $record['form'][]='newspaper'; break;
+          case 'p': $record['form'][]='periodical'; break;
+        }
+        if($leader[7] == 'a'){
+          $record['form'][] = 'article';
+        }
+      } elseif (in_array('text', $record['form'])) {
+        if (isset($this->textContent[$f008[0][24]])) {
+            // Slight simplification
+            $record['form'][] = $this->textContent[$f008[0][24]];
+        }
+        if ($leader[7] == 'a') {
+            $material = 'Article';
+            $record['form'][] = 'article';
+        }
+      }
+    }
     foreach($marc_record as $field => &$info){
       switch($field){
-        case 'leader':
-          $type = substr($info, 6, 1);
-          if(isset($this->resource_types[$type])){
-            $catalog_item->set('type', $this->resource_types[$type]);
-          } break;
+        case 'leader': break;
         case '001':
           $catalog_item->set('guid', (string) $info[0]);
           $catalog_item->set('tcn', (string) $info[0]); break;
-        case '005': 
-          $catalog_item->set('active_date', substr($info[0], 0, 8)); break;
-        case '007':
-          foreach($info as $v){
-            $form = substr($v, 0, 1);
-            if(isset($this->form_codes[$form])){
-              $record['form'][]=$this->form_codes[$form];
-            }
-          } break;
-        case '008':
-          $lang = substr($info[0], 30);
-          $lang = trim($lang);
-          if(substr($lang,2,3) !== 'eng' && substr($lang,2,3) !== 'und' && substr($lang,2,3) !== 'zxx'){        
-            $record['genre'][] = 'foreign language';
-          } break;
+        // case '005': 
+        //   $catalog_item->set('active_date', substr($info[0], 0, 8)); break;
+        case '007': break;
+        case '008': break;
+        case '010':
+        case '020':
+        case '022':
         case '024':
+        // case '040': 
+        case '060':
+          $type = $field == '010' ? 'lccn' : $field == '020' ? 'isbn' : $field == '022' ? 'issn' : $field == '060' ? 'nlm' : 'other';
           foreach($info as $i => $v){
-            if(isset($v['i1'])){
-              // http://www.loc.gov/marc/bibliographic/bd024.html
-              switch($v['i1']){
-                case 0:
-                case 1:
-                case 2:
-                case 3:
-                case 4:
-                case 7:
-                default:
+            if(isset($v['a'])){
+              $record['identifier_ids'][] = $v['a'];
+              $record['identifier_types'][] = $type;
+              if($type == 'isbn'){
+                $record['isbn'][] = preg_replace('/^([0-9\-xX]+).*$/', '\1', $v['a']);
               }
-
             }
-
-          }
-
+          } break;
         case '028':
           if(strtolower($info[0]['b']) == 'kanopy'){
             $record['cover'] = 'https://www.kanopy.com/sites/default/files/imagecache/vp_poster_small/video-assets/' . $info[0]['a'] . '_poster.jpg'; break;
           }
+        case '080':
         case '082':
           foreach($info as $classification){
             if(isset($classification['a'])){
-              $record['classification'][] = $classification['a'];
+              $record['classification'][] = preg_replace('/^.*?([0-9.]+)\/?([0-9.]*).*$/', '\1\2', $classification['a']);
             }
           } break;
         case '856':
@@ -270,10 +517,9 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
               $title = $this->getStringField($v, $field);
               if(!empty($title)){
                 if(empty($record['title']) && in_array($field, ['245', '130'])){
-                  $record['title'] = $title;
-                } else {
-                  $record['titles'][]=$title;
+                  $record['title'] = $name = trim(preg_replace('/\[.*\]/',"", $title),"= / . : , ; ");
                 }
+                $record['titles'][]=$title;
               }
             }
           }
@@ -288,7 +534,7 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
             if(!empty($s)){
               $record['topics'] = array_merge($record['topics'], $s);
               $record['audience'] = array_merge($record['audience'], $s);
-              if($field == 655){
+              if($field == 655){ //|| $field == 653
                 $record['genre'] = array_merge($record['genre'], $s);
               }
             }
@@ -426,26 +672,28 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
       return null;
     }
 
-    if(isset($field->i1)){
-      unset($field->i1);
-    }
-    if(isset($field->i2)){
-      unset($field->i2);
+    foreach($field as $f){
+      if(isset($f['i1'])){
+        unset($f['i1']);
+      }
+      if(isset($f['i2'])){
+        unset($f['i2']);
+      }
     }
     
     $value='';
 
     if($subfield){
       $value = (string) $field[$subfield];
-    }elseif($field_number == 700){
+    } elseif($field_number == 700){
       $value = $field['a'];
-    }elseif($field_number == 710){
+    } elseif($field_number == 710){
       $value = isset($field['a']) ? $field['a'] : implode($separator, $field);
-    }elseif($field_number == 264){
+    } elseif($field_number == 264){
       $value = isset($field['b']) ? $field['b']: implode($separator, $field);
-    }elseif($field_number == 245){
+    } elseif($field_number == 245){
       $value = isset($field['a']) ? $field['a'] : implode($separator, $field);
-    }else{
+    } else{
       $value = implode($separator, $field);
     }
     $value = trim($value);
@@ -456,20 +704,20 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
     $field = array_merge(array(), $array);
     $value = array();
 
-    if(isset($field->i1)){
-      unset($field->i1);
+    if(isset($field['i1'])){
+      unset($field['i1']);
     }
-    if(isset($field->i2)){
-      unset($field->i2);
+    if(isset($field['i2'])){
+      unset($field['i2']);
     }
 
     foreach($field as $f){
       if(is_array($f)){
-        if(isset($field->i1)){
-          unset($field->i1);
+        if(isset($f['i1'])){
+          unset($f['i1']);
         }
-        if(isset($field->i2)){
-          unset($field->i2);
+        if(isset($f['i2'])){
+          unset($f['i2']);
         }
         if($separator){
           $val = implode($separator, $f);
