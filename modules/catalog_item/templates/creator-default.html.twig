@@ -1,0 +1,8 @@
+{% if name %}
+  <div class="creator"><span class="creator__name">{{ name }}</span>
+
+{% if role %}
+  / <span class="creator__role">{{ role }}</span>
+  {% endif %}
+  </div>
+{% endif %}

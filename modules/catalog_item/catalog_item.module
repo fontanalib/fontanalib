@@ -184,6 +184,11 @@ function catalog_item_theme() {
     'field__catalog_item__created' => [
       'base hook' => 'field',
     ],
+    'creator_default' => array(
+      'variables' => array('name' => NULL, 'role' => NULL),
+      'template' => 'creator-default',
+    ),
+
   ];
 }
 
