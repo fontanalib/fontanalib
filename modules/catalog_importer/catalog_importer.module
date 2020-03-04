@@ -162,8 +162,9 @@ function catalog_importer_getVocabularies($vids = null){
 function catalog_importer_feeds_target_plugins_alter(array &$definitions) {
   // Our plugin serves same target type as the one from paragraphs module.
   // So we must disable that one.
-  // dd($definitions);
+  
   // unset($definitions['paragraphs']);
+  // dd($definitions);
   // $definitions['paragraphs']["class"] = "Drupal\catalog_importer\Feeds\Target\Paragraphs";
   // $definitions['paragraphs']["class"] = "Drupal\catalog_importer\Feeds\Target\Paragraphs";
   // $definitions['paragraphs']["provider"] = "catalog_importer";

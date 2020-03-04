@@ -159,9 +159,9 @@ class MatchKeywordsToTerms extends TamperBase {
    * {@inheritdoc}
    */
   public function tamper($data, TamperableItemInterface $item = NULL) {
-    \Drupal::logger('catalog_importer')->notice('RAW: <pre>@exclude</pre>', array(
-      '@exclude'  => print_r($data, TRUE),
-    )); 
+    // \Drupal::logger('catalog_importer')->notice('RAW: <pre>@exclude</pre>', array(
+    //   '@exclude'  => print_r($data, TRUE),
+    // )); 
     $vocab = $this->getSetting(self::SETTING_OPERATION);
     $catalog_vocabularies = \Drupal::config('fontanalib.settings')->get('catalog_importer_cached_vocabs');
 
@@ -175,10 +175,10 @@ class MatchKeywordsToTerms extends TamperBase {
       $message .= ' Please visit Configuration > Web Services > Catalog Importer Configuration to setup.';
       $message .= ' Data will be returned from this plugin without tampering.';
 
-      \Drupal::logger('catalog_importer')->error($message, array(
-              '@label'  => $this->getSetting('label'),
-              '@vocab' => $vocab,
-          ));
+      // \Drupal::logger('catalog_importer')->error($message, array(
+      //         '@label'  => $this->getSetting('label'),
+      //         '@vocab' => $vocab,
+      //     ));
 
       return $data;
     }
@@ -191,10 +191,10 @@ class MatchKeywordsToTerms extends TamperBase {
         $message .= ' Please visit Configuration > Web Services > Catalog Importer Configuration to rebuild the term cache';
         $message .= ' or double check that your vocabulary term list is nested hierarchically.';
 
-        \Drupal::logger('catalog_importer') ->error($message, array(
-              '@label'  => $this->getSetting('label'),
-              '@vocab' => $vocab,
-          ));
+        // \Drupal::logger('catalog_importer') ->error($message, array(
+        //       '@label'  => $this->getSetting('label'),
+        //       '@vocab' => $vocab,
+        //   ));
       }else{
         $exclude = array();
         foreach($exclusions as $key => $e){
@@ -216,9 +216,9 @@ class MatchKeywordsToTerms extends TamperBase {
     // if($this->getSetting(self::SETTING_REDUCE)){
     //   return $this->reduceAudience($terms, $vocab);
     // }
-    \Drupal::logger('catalog_importer')->notice('terms <pre>@exclude</pre>', array(
-      '@exclude'  => print_r($terms, TRUE),
-    )); 
+    // \Drupal::logger('catalog_importer')->notice('terms <pre>@exclude</pre>', array(
+    //   '@exclude'  => print_r($terms, TRUE),
+    // )); 
 
    return $this->getSetting(self::SETTING_REDUCE) ? $this->reduceAudience($terms, $vocab) : array_unique($terms);
   }
@@ -247,9 +247,9 @@ class MatchKeywordsToTerms extends TamperBase {
     
     $check = $counts;
     $check = array_unique(array_values($check));
-    \Drupal::logger('catalog_importer')->notice('ReduceAudience <pre>@exclude</pre>', array(
-      '@exclude'  => print_r($counts, TRUE),
-    ));
+    // \Drupal::logger('catalog_importer')->notice('ReduceAudience <pre>@exclude</pre>', array(
+    //   '@exclude'  => print_r($counts, TRUE),
+    // ));
 
     if(count($check) > 1){
       arsort($counts);
@@ -401,9 +401,9 @@ class MatchKeywordsToTerms extends TamperBase {
 //     $parent_count[$count[$name]] = $name;
 //   }
 // }
-\Drupal::logger('catalog_importer')->notice('cleanupGenres <pre>@exclude</pre>', array(
-  '@exclude'  => print_r($count, TRUE),
-));
+// \Drupal::logger('catalog_importer')->notice('cleanupGenres <pre>@exclude</pre>', array(
+//   '@exclude'  => print_r($count, TRUE),
+// ));
     if(count(array_filter($check))>=1 && $count[0] != $count[1]){
       array_shift($count);
       foreach($count as $parent => $num){

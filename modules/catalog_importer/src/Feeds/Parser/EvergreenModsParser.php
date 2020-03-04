@@ -80,6 +80,9 @@ class EvergreenModsParser extends PluginBase implements ParserInterface {
         $description = $this->getResourceDescription($item);
         $yourItem->set('description', $description);
       }
+      \Drupal::logger('catalog_importer')->notice('ITEM: <pre>@exclude</pre>', array(
+        '@exclude'  => print_r($yourItem, TRUE),
+      )); 
       $result->addItem($yourItem);
     }
     return $result;

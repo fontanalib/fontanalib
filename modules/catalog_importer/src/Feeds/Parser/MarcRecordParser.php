@@ -388,6 +388,8 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
       'identifier_ids' => array(),
       'identifier_types'=> array(),
       'isbn'            =>array(),
+      'ids'             =>array(),
+      'item_creators'   =>array()
     );
     $catalog_item = new CatalogItem();
     $leader = isset($marc_record['leader']) ? str_split($marc_record['leader']) : null;
@@ -584,15 +586,31 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
     $roles = !empty($record['creators']['roles']) ? array_map(function($role_array){
       return implode(", ", $role_array);
     }, $record['creators']['roles']) : array();
+    $identifiers = array_combine($record['identifier_ids'], $record['identifier_types']);
+    foreach($identifiers as $id => $t){
+      $record['ids'][]= array(
+        'field_identifier_id' => $id,
+        'field_identifier_type' => $t
+      );
+    }
+    $creators = array_combine($record['creators']['names'], $record['creators']['roles']);
+    foreach($creators as $name => $role){
+      $record['item_creators'][]= array(
+        'field_creator_name' => $name,
+        'field_creator_role' => $role
+      );
+    }
 
     $catalog_item->set('alt_titles', $record['titles'])
       ->set('identifier_types', $record['identifier_types'])
       ->set('identifier_ids', $record['identifier_ids'])
+      ->set('item_ids', $record['ids'])
       ->set('isbn', $record['isbn'])
       ->set('audience', $record['audience'])
       ->set('genre', $record['genre'])
       ->set('topics', $record['topics'])
-      ->set('item_creators', $record['creators']['names'])
+      ->set('item_creators', $record['item_creators'])
+      ->set('creators', $record['creators']['names'])
       ->set('roles', $roles)
       ->set('image', $record['cover'])
       ->set('form', $record['form'])
