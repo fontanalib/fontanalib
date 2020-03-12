@@ -29,9 +29,6 @@ class Creator extends FieldTargetBase {
    * {@inheritdoc}
    */
   protected function prepareValue($delta, array &$values) {
-    \Drupal::logger('catalog_importer')->notice("val $delta: <pre>@exclude</pre>", array(
-      '@exclude'  => print_r($values, TRUE),
-    )); 
     $values['name'] = trim($values['name'], " \t\n\r\0\x0B-./\\");
     $values['role'] = trim($values['role'], " \t\n\r\0\x0B-./\\");
   }

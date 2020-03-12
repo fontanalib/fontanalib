@@ -386,7 +386,8 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
       'classification'  => array(),
       'identifier_ids' => array(),
       'identifier_types'=> array(),
-      'item_creators'   =>array()
+      'item_creators'   =>array(),
+      'file_name' => ''
     );
     $catalog_item = new CatalogItem();
     $leader = isset($marc_record['leader']) ? str_split($marc_record['leader']) : null;
@@ -442,9 +443,9 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
        */
       $catalog_item->set('active_date', implode("", $date));
       $lang = implode("", array_slice($f008[0], 35, 3));//substr($marc_record['008'][0], 35, 3); 
-      \Drupal::logger('catalog_importer')->notice("LANG- $lang: <pre>@exclude</pre>", array(
-              '@exclude'  => print_r($f008, TRUE),
-            )); 
+      // \Drupal::logger('catalog_importer')->notice("LANG- $lang: <pre>@exclude</pre>", array(
+      //         '@exclude'  => print_r($f008, TRUE),
+      //       )); 
       if($lang !== 'eng' && $lang !== 'und' && $lang !== 'zxx'){
         $record['genre'][] = 'foreign language';
       } 
@@ -515,7 +516,14 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
           } break;
         case '028':
           if(strtolower($info[0]['b']) === 'kanopy'){
-            $record['cover'] = 'https://www.kanopy.com/sites/default/files/imagecache/vp_poster_small/video-assets/' . $info[0]['a'] . '_poster.jpg'; break;
+            $filename = $info[0]['a'] . '.jpg';
+            $files = \Drupal::entityTypeManager()->getStorage('file')->loadByProperties(['filename' => $filename]);
+            // dd("filedumpcheck",$files);
+            if($files && !empty($files)){
+              $record['cover'] = array_key_first($files);            
+            } else{
+              $record['file_name'] = $filename;          
+            } break;
           }
         case '080':
         case '082':
@@ -534,9 +542,10 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
               // $record['cover'] = $url['u'];
               $record['identifier_ids'][] = $url['u'];
               $record['identifier_types'][] = 'image url';
+              continue;
             }
             if($url['i2'] === 0 && $url['i1'] === 4 && stripos($url['z'], 'kanopy') !== FALSE){
-              $catalog_item->set('tcn', substr($url['u'], strpos($url['u'], "kanopy.com/node/") + 1));
+              $catalog_item->set('tcn', parse_url($url['u'])['fragment']);
             }
             $record['identifier_ids'][] = $url['u'];
             $record['identifier_types'][] = 'url';
@@ -627,11 +636,38 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
     //   'ids'             =>array(),
     //   'item_creators'   =>array()
     // );
+    //==============================================================
+
+    /**
+     * GET THE IMAGE -- CHECK IF CATALOG_ITEM ALREADY EXISTS
+     */
+
+  //   if(!empty($record['file_name'])){
+  //     $exists = \Drupal::entityTypeManager()->getStorage('catalog_item')->loadByProperties(['field_tcn' => $filename]);
+  //     if (!reset($exists)) {
+  //     // $directory = drupal_realpath('public://covers');
+  //     $directory = file_default_scheme() . '://covers';
+  //     // $destination =  $directory . '/' . $filename;
+  //     if (!is_dir($directory)) {
+  //       $file_system = \Drupal::service('file_system');
+  //       $file_system->mkdir($directory, 0777);
+  //     }
+  //     $destination = $directory . '/' . $record['file_name'];
+  //     $url = 'https://www.kanopy.com/sites/default/files/imagecache/vp_poster_small/video-assets/' . substr($record['file_name'], 0, -4) . '_poster.jpg';
+  //     $file = system_retrieve_file($url, $destination, TRUE, FILE_EXISTS_ERROR);
+  //     if($file){
+  //       $record['cover'] = $file->id();
+  //     }
+  //   }
+  // }
+
+
+
+    //======================================================
 
     $catalog_item->set('alt_titles', $record['titles'])
       ->set('identifier_types', $record['identifier_types'])
       ->set('identifier_ids', $record['identifier_ids'])
-      ->set('isbn', $record['isbn'])
       ->set('audience', $record['audience'])
       ->set('genre', $record['genre'])
       ->set('topics', $record['topics'])
@@ -742,6 +778,9 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
         } else {
           $key = array_search($name, $creators['names']);
           foreach($roles as $r){
+            if(in_array('dst', $roles) && $r === 'prod/dst'){
+              continue;
+            }
             if(!in_array($r, $creators['roles'][$key])){
               $creators['roles'][$key][]=$r;
             }

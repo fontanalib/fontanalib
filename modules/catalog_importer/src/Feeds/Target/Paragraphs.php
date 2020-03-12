@@ -132,9 +132,9 @@ class Paragraphs extends FieldTargetBase implements ConfigurableTargetInterface 
    *   The values.
    */
   protected function prepareValues(array $values) {
-    \Drupal::logger('catalog_importer')->notice('PARAVALULES: <pre>@exclude</pre>', array(
-      '@exclude'  => print_r($values, TRUE),
-    )); 
+    // \Drupal::logger('catalog_importer')->notice('PARAVALULES: <pre>@exclude</pre>', array(
+    //   '@exclude'  => print_r($values, TRUE),
+    // )); 
     $return = [];
     foreach ($values as $delta => $columns) {
       try {
