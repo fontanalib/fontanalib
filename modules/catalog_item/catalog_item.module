@@ -188,6 +188,10 @@ function catalog_item_theme() {
       'variables' => array('name' => NULL, 'role' => NULL),
       'template' => 'creator-default',
     ),
+    'catalog_item_identifier_default' => array(
+      'variables' => array('id' => NULL, 'type' => NULL, 'cover_image'=> NULL),
+      'template' => 'identifier-default',
+    ),
 
   ];
 }

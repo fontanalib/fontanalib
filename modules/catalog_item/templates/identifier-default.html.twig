@@ -1,0 +1,11 @@
+{% if id %}
+  <div class="identifier"><span class="identifier__id">{{ id }}</span>
+
+{% if type %}
+  / <span class="identifier__type">{{ type }}</span>
+  {% endif %}
+  {% if cover_image %}
+  <span class="indentifier_cover">✔</span>
+  {% endif %}
+  </div>
+{% endif %}
