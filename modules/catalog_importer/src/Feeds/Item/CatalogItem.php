@@ -22,7 +22,6 @@ class CatalogItem extends BaseItem {
   protected $topics;
   protected $image;
   protected $tcn;
-  protected $url;
   protected $identifier_ids;
   protected $identifier_types;
   protected $type;
