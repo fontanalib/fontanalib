@@ -375,7 +375,6 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
         'roles'=>array()
       ], 
       'description'     => array(),
-      'urls'            => array(), // 856[0][u]
       'cover'           => '',
       'topics'          => array(), // 650
       'genre'           => array(), // 655
@@ -387,8 +386,6 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
       'classification'  => array(),
       'identifier_ids' => array(),
       'identifier_types'=> array(),
-      'isbn'            =>array(),
-      'ids'             =>array(),
       'item_creators'   =>array()
     );
     $catalog_item = new CatalogItem();
@@ -476,8 +473,10 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
       switch($field_str){
         case 'leader': break;
         case '001':
-          $catalog_item->set('guid', (string) $info[0]);
-          $catalog_item->set('tcn', (string) $info[0]); break;
+          $catalog_item->set('guid', (string) $info[0]); 
+          if(strtolower(substr($info[0], 0, 3)) !== 'kan'){
+            $catalog_item->set('tcn', (string) $info[0]);
+          } break;
         // case '005': 
         //   $catalog_item->set('active_date', substr($info[0], 0, 8)); break;
         case '007': break;
@@ -531,10 +530,16 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
           } break;
         case '856':
           foreach($info as $url){
-            if(empty($cover) && strpos($url['u'], '/external-image') !== FALSE){
-              $record['cover'] = $url['u'];
+            if(strpos($url['u'], '/external-image') !== FALSE){
+              // $record['cover'] = $url['u'];
+              $record['identifier_ids'][] = $url['u'];
+              $record['identifier_types'][] = 'image url';
             }
-            $record['urls'][] = $url['u'];
+            if($url['i2'] === 0 && $url['i1'] === 4 && stripos($url['z'], 'kanopy') !== FALSE){
+              $catalog_item->set('tcn', substr($url['u'], strpos($url['u'], "kanopy.com/node/") + 1));
+            }
+            $record['identifier_ids'][] = $url['u'];
+            $record['identifier_types'][] = 'url';
           } break;
         case '546':
           $info[0]['a'] = implode(", ", explode(",",$info[0]['a']));
@@ -600,11 +605,32 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
         'field_creator_role' => $role
       );
     }
+    // $record = array(
+    //   'creators'        => [
+    //     'names'=>array(),
+    //     'roles'=>array()
+    //   ], 
+    //   'description'     => array(),
+    //   'urls'            => array(), // 856[0][u]
+    //   'cover'           => '',
+    //   'topics'          => array(), // 650
+    //   'genre'           => array(), // 655
+    //   'audience'        => array(),
+    //   'titles'          => array(),
+    //   'title'           => '',
+    //   'type'            => '',
+    //   'form'            => array(),
+    //   'classification'  => array(),
+    //   'identifier_ids' => array(),
+    //   'identifier_types'=> array(),
+    //   'isbn'            =>array(),
+    //   'ids'             =>array(),
+    //   'item_creators'   =>array()
+    // );
 
     $catalog_item->set('alt_titles', $record['titles'])
       ->set('identifier_types', $record['identifier_types'])
       ->set('identifier_ids', $record['identifier_ids'])
-      ->set('item_ids', $record['ids'])
       ->set('isbn', $record['isbn'])
       ->set('audience', $record['audience'])
       ->set('genre', $record['genre'])
@@ -873,14 +899,6 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
         'label' => $this->t('Description'),
         'description' => $this->t('Resource abstract/description'),
       ],
-      'item_creators'=> [
-        'label' => $this->t('ITEM CREATORS'),
-        'description' => $this->t('Resource creators and their roles'),
-      ],
-      'item_ids'=> [
-        'label' => $this->t('ITEM IDs'),
-        'description' => $this->t('Resource isbns and identifiers'),
-      ],
       'featured_collection' => [
         'label' => $this->t('Featured Collection'),
         'description' => $this->t('Featured Collection Terms'),
@@ -888,10 +906,6 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
       'genre' => [
         'label' => $this->t('Genre'),
         'description' => $this->t('Genre Indicators'),
-      ],
-      'isbn' => [
-        'label' => $this->t('ISBN'),
-        'description' => $this->t('ISBN'),
       ],
       'topics' => [
         'label' => $this->t('Topics'),
@@ -905,10 +919,6 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
         'label' => $this->t('TCN'),
         'description' => $this->t('Record ID'),
       ],
-      'url' => [
-        'label' => $this->t('URL'),
-        'description' => $this->t('item Record URL'),
-      ],
       'identifier_ids' => [
         'label' => $this->t('Identifier IDs'),
         'description' => $this->t('item Record identifier IDs'),
@@ -916,10 +926,6 @@ class MarcRecordParser extends PluginBase implements ParserInterface {
       'identifier_types' => [
         'label' => $this->t('Identifier Types'),
         'description' => $this->t('item Record identifier types'),
-      ],
-      'catalog' => [
-        'label' => $this->t('Catalog'),
-        'description' => $this->t('Catalog source for this resource.'),
       ],
       'type' => [
         'label' => $this->t('Resource Type'),

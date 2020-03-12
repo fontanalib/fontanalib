@@ -15,6 +15,7 @@ use Drupal\Core\Field\FieldItemInterface;
  *   id = "creator",
  *   label = @Translation("Creator field"),
  *   default_formatter = "creator_default",
+ *   category = @Translation("Catalog Item"),
  *   default_widget = "creator_default",
  * )
  */
