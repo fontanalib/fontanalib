@@ -1,0 +1,13 @@
+langcode: en
+status: true
+dependencies: {  }
+id: catalog_item_cover
+label: 'Catalog Item Cover'
+description: "Use local images for reusable media for catalog items."
+source: image
+queue_thumbnail_downloads: false
+new_revision: false
+source_configuration:
+  source_field: field_media_catalog_image
+field_map:
+  name: name

@@ -19,6 +19,7 @@ dependencies:
     - catalog_item
     - datetime
     - image
+    - media_library
     - text
 id: catalog_item.evergreen.default
 targetEntityType: catalog_item
@@ -79,10 +80,9 @@ content:
   field_catalog_image:
     weight: 10
     settings:
-      progress_indicator: throbber
-      preview_image_style: thumbnail
+      media_types: {  }
     third_party_settings: {  }
-    type: image_image
+    type: media_library_widget
     region: content
   field_catalog_genre:
     type: entity_reference_autocomplete_tags
