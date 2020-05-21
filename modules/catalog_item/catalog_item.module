@@ -527,7 +527,7 @@ function template_preprocess_catalog_item_add_list(&$variables) {
     foreach ($variables['content'] as $type) {
       $variables['catalogs'][$type->id()] = [
         'type' => $type->id(),
-        'add_link' => Link::fromTextAndUrl($type->label(), Url::fromRoute('catalog_item.add', ['catalg' => $type->id()]))->toString(),
+        'add_link' => Link::fromTextAndUrl($type->label(), Url::fromRoute('catalog_item.add', ['catalog' => $type->id()]))->toString(),
         'description' => [
           '#markup' => $type->getDescription(),
         ],
