@@ -5,6 +5,7 @@ dependencies:
     module:
       - catalog_item
   module:
+    - catalog_item
     - file
     - image
 id: catalog_item.field_catalog_image
