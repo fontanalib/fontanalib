@@ -5,6 +5,9 @@ dependencies:
     - catalog_item.catalog.evergreen
     - field.storage.catalog_item.field_catalog_image
     - media.type.catalog_item_cover
+  enforced:
+    module:
+      - catalog_item
 id: catalog_item.evergreen.field_catalog_image
 field_name: field_catalog_image
 entity_type: catalog_item

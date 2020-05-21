@@ -3,9 +3,6 @@ status: true
 dependencies:
   module:
     - taxonomy
-  enforced:
-    module:
-      - catalog_item
 name: Keyword
 vid: keyword
 description: 'Catalog topics and Subject Headings'

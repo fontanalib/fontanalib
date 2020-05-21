@@ -6,6 +6,9 @@ dependencies:
     - field.storage.catalog_item.field__catalog_creator
   module:
     - catalog_item
+  enforced:
+    module:
+      - catalog_item
 id: catalog_item.evergreen.field_catalog_creator
 field_name: field_catalog_creator
 entity_type: catalog_item

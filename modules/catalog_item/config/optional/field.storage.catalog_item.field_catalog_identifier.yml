@@ -3,6 +3,9 @@ status: true
 dependencies:
   module:
     - catalog_item
+  enforced:
+    module:
+      - catalog_item
 id: catalog_item.field_catalog_identifier
 field_name: field_catalog_identifier
 entity_type: catalog_item

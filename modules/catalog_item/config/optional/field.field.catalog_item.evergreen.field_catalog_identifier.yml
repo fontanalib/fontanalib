@@ -1,6 +1,9 @@
 langcode: en
 status: true
 dependencies:
+  enforced:
+    module:
+      - catalog_item
   config:
     - field.storage.catalog_item.field_catalog_identifier
     - catalog_item.catalog.evergreen
