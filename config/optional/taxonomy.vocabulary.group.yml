@@ -1,0 +1,9 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - taxonomy
+name: Group
+vid: group
+description: 'Use Group to assist in assigning secondary ownership to content.'
+weight: 0
