@@ -3,7 +3,7 @@ type: module
 description: 'Allows catalog items to be submitted to the site and displayed on pages.'
 package: 'fontanalib'
 version: VERSION
-core: ^8 || ^9
+core_version_requirement: ^8 || ^9
 configure: entity.catalog.collection
 dependencies:
   - drupal:text
