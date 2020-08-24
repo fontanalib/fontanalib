@@ -1,7 +1,7 @@
 name: 'fontanalib'
 type: module
 description: 'Custom functionality for Fontana Regional Library'
-core: 8.x || ^9
+core: ^8 || ^9
 package: 'fontanalib'
 dependencies:
   - nodeaccess:nodeaccess
