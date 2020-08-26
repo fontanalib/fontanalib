@@ -1,9 +1,0 @@
-langcode: en
-status: true
-dependencies:
-  module:
-    - taxonomy
-name: Keyword
-vid: keyword
-description: 'Catalog topics and Subject Headings'
-weight: 0
