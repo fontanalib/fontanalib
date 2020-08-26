@@ -9,6 +9,7 @@ dependencies:
     - media
 id: catalog_item.field_catalog_image
 field_name: field_catalog_image
+entity_type: catalog_item
 type: entity_reference
 settings:
   target_type: media
