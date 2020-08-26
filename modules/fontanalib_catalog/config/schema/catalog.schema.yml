@@ -1,0 +1,10 @@
+catalog.catalog.*:
+  type: config_entity
+  label: 'Catalog config'
+  mapping:
+    id:
+      type: string
+      label: 'ID'
+    label:
+      type: label
+      label: 'Label'

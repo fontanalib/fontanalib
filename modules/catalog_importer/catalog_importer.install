@@ -32,8 +32,8 @@
  */
 function catalog_importer_install() {
     \Drupal::logger('catalog_importer')->notice('install....');
-  $config = \Drupal::service('config.factory')->getEditable('catalog_importer.settings');
-  $config->set('keyword_fields', array(
+  $config = \Drupal::service('config.factory')->getEditable('fontanalib.settings');
+  $config->set('catalog_importer_keyword_fields', array(
     'field_kw_matches'      => 'Keyword Matches',
     'field_kw_starts'       => 'Keyword Starts with',
     'field_kw_ends'         => 'Keyword Ends with',

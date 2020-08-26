@@ -1,0 +1,10 @@
+delete resource entity:
+  title: Delete term entity content.
+add resource entity:
+  title: Add term entity content
+view resource entity:
+  title: View term entity content
+edit resource entity:
+  title: Edit term entity content
+administer resource entity:
+  title: Administer term settings

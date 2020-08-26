@@ -1,0 +1,57 @@
+# This file brings everything together. Very nifty!
+
+# Route name can be used in sevaral place (links, redirects, local actions etc.)
+entity.resource.canonical:
+  path: '/catalog/{resource}'
+  defaults:
+  # Calls the view controller, defined in the annotation of the resource entity
+  _entity_view: 'resource'
+  _title: 'Catalog Content'
+  requirements:
+  # Calls the access controller of the entity, $operation 'view'
+  _entity_access: 'resource.view'
+  
+  entity.resource.collection:
+  path: '/resource/list'
+  defaults:
+  # Calls the list controller, defined in the annotation of the resource entity.
+  _entity_list: 'resource'
+  _title: 'resource List'
+  requirements:
+  # Checks for permission directly.
+  _permission: 'view resource entity'
+  
+  entity.catalog.resource_add:
+  path: '/catalog/add'
+  defaults:
+  # Calls the form.add controller, defined in the resource entity.
+  _entity_form: resource.add
+  _title: 'Add resource'
+  requirements:
+  _entity_create_access: 'resource'
+  
+  entity.resource.edit_form:
+  path: '/catalog/{resource}/edit'
+  defaults:
+  # Calls the form.edit controller, defined in the resource entity.
+  _entity_form: resource.edit
+  _title: 'Edit resource'
+  requirements:
+  _entity_access: 'resource.edit'
+  
+  entity.resource.delete_form:
+  path: '/catalog/{resource}/delete'
+  defaults:
+  # Calls the form.delete controller, defined in the resource entity.
+  _entity_form: resource.delete
+  _title: 'Delete resource'
+  requirements:
+  _entity_access: 'resource.delete'
+  
+  entity.catalog.resource_settings:
+  path: 'admin/structure/catalog_settings'
+  defaults:
+  _form: '\Drupal\fontanalib_catalog\Form\ResourceSettingsForm'
+  _title: 'Catalog Settings'
+  requirements:
+  _permission: 'administer resource entity'

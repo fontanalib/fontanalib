@@ -1,0 +1,9 @@
+catalog.resource_add:
+  # Which route will be called by the link
+  route_name: entity.catalog.resource_add
+  title: 'Add resource'
+  
+  # Where will the link appear, defined by route name.
+  appears_on:
+  - entity.resource.collection
+  - entity.resource.canonical

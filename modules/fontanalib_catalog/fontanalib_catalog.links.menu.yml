@@ -1,0 +1,12 @@
+# Define the menu links for this module
+
+entity.resource.collection:
+  title: 'Catalog Content: Resource Listing'
+  route_name: entity.resource.collection
+  description: 'List resources'
+  weight: 10
+entity.resource.admin.structure.settings:
+  title: Resource Settings
+  description: 'Configure resource entity'
+  route_name:  entity.catalog.resource_settings
+  parent: system.admin_structure

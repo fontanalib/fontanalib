@@ -1,0 +1,22 @@
+# Define the 'local' links for the module
+
+entity.resource.settings_tab:
+  route_name: catalog.resource_settings
+  title: Settings
+  base_route: catalog.resource_settings
+  
+  entity.resource.view:
+  route_name: entity.resource.canonical
+  base_route: entity.resource.canonical
+  title: View
+  
+  entity.resource.page_edit:
+  route_name: entity.resource.edit_form
+  base_route: entity.resource.canonical
+  title: Edit
+  
+  entity.resource.delete_confirm:
+  route_name: entity.resource.delete_form
+  base_route: entity.resource.canonical
+  title: Delete
+  weight: 10

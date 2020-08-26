@@ -1,0 +1,66 @@
+schema {
+  query: Query
+  mutation: Mutation
+}
+
+type Query {
+  article(id: Int!): Article
+  articles(
+    offset: Int = 0
+    limit: Int = 10
+  ): ArticleConnection!
+  page(id: Int!): Page
+  pages(
+    offset: Int = 0
+    limit: Int = 10
+  ): PageConnection!
+}
+
+type Author {
+  name: String!
+  mail: String!
+  picture: Image
+  library: String
+  position: String
+}
+
+type Term {
+  name: String!
+  id: Int!
+}
+
+type Image {
+  url: String!
+  width: Int
+  height: Int
+}
+
+type FeaturedImage {
+  thumbnail: Image
+  medium: Image
+  Large: Image
+}
+
+type Article {
+  id: Int!
+  title: String!
+  author: Author
+  body: String
+  summary: String
+  featured_image: FeaturedImage
+  created:
+  tags: [Term]
+}
+
+type ArticleConnection {
+  total: Int!
+  items: [Article!]
+}
+type Page {
+  id: Int!
+  title: String
+}
+type PageConnection {
+  total: Int!
+  items: [Page!]
+}
