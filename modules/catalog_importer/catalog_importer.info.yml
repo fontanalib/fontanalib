@@ -3,8 +3,8 @@ description: Provides custom import functionality for Fontanalib.
 package: 'fontanalib'
 type: module
 configure: catalog_importer.overview
-version: 1.1
-core: 8.x
+version: 1.3
+core_version_requirement: ^8 || ^9
 dependencies:
   - feeds:feeds
   - feeds_tamper:feeds_tamper
